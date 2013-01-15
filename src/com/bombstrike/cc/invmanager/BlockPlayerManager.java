@@ -1,41 +1,37 @@
 package com.bombstrike.cc.invmanager;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Random;
 
-import buildcraft.transport.TileGenericPipe;
-
-import cpw.mods.fml.common.Loader;
-
-import dan200.computer.api.ComputerCraftAPI;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.EntityRainFX;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
+import dan200.computer.api.ComputerCraftAPI;
 
 public class BlockPlayerManager extends BlockContainer {
+	Class<?> computerEntityInterface = null;
+	
 	public BlockPlayerManager(int blockId) {
 		super(blockId, Material.iron);
 		setBlockName("Player Manager Peripheral");
 		setHardness(3.0F);
 		setStepSound(soundMetalFootstep);
 		setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F/8.0F, 1.0F);
-		setLightValue(5.0F/15.0F);
-		setCreativeTab(ComputerCraftAPI.getCreativeTab());
+		setCreativeTab(CreativeTabs.tabRedstone);
 		setRequiresSelfNotify();
+
+		try {
+			computerEntityInterface = Class.forName("dan200.computer.shared.IComputerEntity");
+		} catch (Exception e) {
+			return;
+		}
 	}
 
 	@Override
@@ -48,24 +44,9 @@ public class BlockPlayerManager extends BlockContainer {
 	@Override
 	public void onBlockPlacedBy(World world, int x, int y, int z, EntityLiving entityliving) {
 		super.onBlockPlacedBy(world, x, y, z, entityliving);
+		
+		if (world.isRemote) return;
 
-		// heavily inspired from BuildCraft
-		double dx = x - entityliving.posX;
-		double dz = z - entityliving.posZ;
-
-		double angle = Math.atan2(dz, dx) / Math.PI * 180 + 180;
-		ForgeDirection orientation;
-		if (angle < 45 || angle > 315)
-			orientation = ForgeDirection.EAST;
-		else if (angle < 135)
-			orientation = ForgeDirection.SOUTH;
-		else if (angle < 225)
-			orientation = ForgeDirection.WEST;
-		else
-			orientation = ForgeDirection.NORTH;
-
-		// initial meta data is this, ordinal between 0 and 5
-		world.setBlockMetadataWithNotify(x, y, z, orientation.getOpposite().ordinal());
 		recomputeConnections(world, x, y, z);
 	}
 
@@ -95,17 +76,14 @@ public class BlockPlayerManager extends BlockContainer {
 		
 		if (world.isRemote) return;
 
-		if ((blockID == 0) || (Item.itemsList[blockID].getItemName().compareTo("tile.cccomputer") == 0)) {
-			//if (blockID > 0) InventoryManager.logger.info("Neighbor block changed 3: {" + x + ";" + y + ";" + z + "}@" + Item.itemsList[blockID].getItemName() + "/" + world.isRemote);
-			//else InventoryManager.logger.info("Neighbor block changed 3: {" + x + ";" + y + ";" + z + "}@0/" + world.isRemote);
-			recomputeConnections(world, x, y, z);
-		}
+		recomputeConnections(world, x, y, z);
 	}
 	
 	@Override
 	public void randomDisplayTick(World world, int x, int y, int z, Random random)
     {
-		if (((TileEntityPlayerManager)world.getBlockTileEntity(x, y, z)).isPlayerOn()) {
+		// TODO: switch that thing to use a nice particle effect
+		/*if ((world.getBlockMetadata(x, y, z) & 0x8) > 0) {
 			int position = random.nextInt(4);
 		    double origX = x + 0.125D;
 		    double origY = y + 0.125D;
@@ -126,7 +104,7 @@ public class BlockPlayerManager extends BlockContainer {
 		    }
 		
 		    world.spawnParticle("reddust", origX, origY, origZ, -1.0D, 1.0D, 0.0D);
-		}
+		}*/
     }
 	
 	@Override
@@ -171,19 +149,20 @@ public class BlockPlayerManager extends BlockContainer {
     }
 	
 	private void recomputeConnections(World world, int x, int y, int z) {
+		if (computerEntityInterface == null) return;
+
 		// search for nearby computers
 		int connections = 0;
 		int shift = 0;
-		ForgeDirection directions[] = { ForgeDirection.EAST, ForgeDirection.SOUTH, ForgeDirection.WEST, ForgeDirection.NORTH };
+		ForgeDirection directions[] = { ForgeDirection.WEST, ForgeDirection.NORTH, ForgeDirection.EAST, ForgeDirection.SOUTH };
+		
 		for (ForgeDirection direction : directions) {
 			TileEntity te = Utils.getTileNeighbor(world, x, y, z, direction);
 			if (te != null) {
-				// is that a computer?
-				if (Item.itemsList[te.getBlockType().blockID].getItemName().compareTo("tile.cccomputer") == 0) {
+				if (computerEntityInterface.isAssignableFrom(te.getClass())) {
 					// create connection
 					connections |= 0x1 << shift;
 				}
-				//InventoryManager.logger.info("Neighbor block: {" + te.xCoord + ";" + te.yCoord + ";" + te.zCoord + "}@" + Item.itemsList[te.getBlockType().blockID].getItemName());
 			}
 			shift++;
 		}
