@@ -1,15 +1,15 @@
 package com.bombstrike.cc.invmanager.client;
 
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.World;
+import net.minecraftforge.client.MinecraftForgeClient;
+
 import com.bombstrike.cc.invmanager.CommonProxy;
 import com.bombstrike.cc.invmanager.InventoryManager;
 import com.bombstrike.cc.invmanager.TileEntityPlayerManager;
 
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
-import dan200.computer.api.ComputerCraftAPI;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.world.World;
-import net.minecraftforge.client.MinecraftForgeClient;
 
 public class ClientProxy extends CommonProxy {
 	@Override

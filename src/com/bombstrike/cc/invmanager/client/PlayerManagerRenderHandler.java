@@ -1,11 +1,11 @@
 package com.bombstrike.cc.invmanager.client;
 
-import com.bombstrike.cc.invmanager.InventoryManager;
-
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.IBlockAccess;
+
+import com.bombstrike.cc.invmanager.InventoryManager;
+
 import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
 
 public class PlayerManagerRenderHandler implements ISimpleBlockRenderingHandler {
@@ -19,13 +19,13 @@ public class PlayerManagerRenderHandler implements ISimpleBlockRenderingHandler 
 	@Override
 	public void renderInventoryBlock(Block block, int metadata, int modelID,
 			RenderBlocks renderer) {
-		pmrenderer.render(0.5, 0.5, 0.5, false, 0, 0xF);
+		pmrenderer.render(-0.5F, 0, -0.5F, false, 0x0);
 	}
 
 	@Override
 	public boolean renderWorldBlock(IBlockAccess world, int x, int y, int z,
 			Block block, int modelId, RenderBlocks renderer) {
-		return false;
+		return true;
 	}
 
 	@Override

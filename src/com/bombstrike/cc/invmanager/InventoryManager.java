@@ -2,14 +2,15 @@ package com.bombstrike.cc.invmanager;
 
 import java.util.logging.Logger;
 
-import com.bombstrike.cc.invmanager.client.PacketHandler;
-
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.Property;
 
+import com.bombstrike.cc.invmanager.client.PacketHandler;
+
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.Init;
 import cpw.mods.fml.common.Mod.Instance;
@@ -25,7 +26,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 import dan200.computer.api.ComputerCraftAPI;
 
-@Mod(modid="invmanager-peripheral", name=InventoryManager.MODNAME, version="1.0", dependencies="required-after:ComputerCraft@[1.481,);required-after:Forge@[6.3.0.0,)")
+@Mod(modid="invmanager-peripheral", name=InventoryManager.MODNAME, version="1.0", dependencies="required-after:Forge@[6.3.0.0,)")
 @NetworkMod(clientSideRequired=false, serverSideRequired=true, channels={InventoryManager.CHANNEL}, packetHandler = PacketHandler.class)
 public class InventoryManager
 {
@@ -83,9 +84,7 @@ public class InventoryManager
 	@PostInit
 	public void postInit(FMLPostInitializationEvent postInit)
 	{
-		GameRegistry.addRecipe(new ItemStack(blockPM, 1), "ppp", "rcr", "sss", 'p', Block.thinGlass, 'r', Item.redstone, 'c', Block.chest, 's', Block.stone);
-		// register recipes?
-		blockPM.setCreativeTab(ComputerCraftAPI.getCreativeTab());
+		GameRegistry.addRecipe(new ItemStack(blockPM, 1), "ttt", "rer", "ppp", 't', Block.thinGlass, 'r', Item.redstone, 'e', Item.enderPearl, 'p', Block.stoneSingleSlab);
 	}
 }
 

@@ -3,26 +3,19 @@ package com.bombstrike.cc.invmanager;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
-import com.bombstrike.cc.invmanager.client.PacketHandler;
-import com.bombstrike.cc.invmanager.compat.ComputerCraft;
-
-import buildcraft.api.transport.IPipeConnection;
-import buildcraft.api.transport.IPipeEntry;
-import buildcraft.api.transport.IPipedItem;
-import buildcraft.core.IMachine;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.Packet250CustomPayload;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraftforge.common.ForgeDirection;
-import net.minecraftforge.oredict.OreDictionary;
+import buildcraft.api.transport.IPipeEntry;
+import buildcraft.api.transport.IPipedItem;
+
+import com.bombstrike.cc.invmanager.client.PacketHandler;
+import com.bombstrike.cc.invmanager.compat.ComputerCraft;
+
 import dan200.computer.api.IComputerAccess;
 import dan200.computer.api.IPeripheral;
 
