@@ -1,7 +1,6 @@
 package com.bombstrike.cc.invmanager;
 
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -24,14 +23,15 @@ public class Utils {
 			this.inventory = inventory;
 		}
 		
-		public ItemStack add(ItemStack stack) {
+		public int add(ItemStack stack) {
 			return add(stack, -1);
 		}
 		
-		public ItemStack add(ItemStack stack, int slot) {
+		public int add(ItemStack stack, int slot) {
 			int invSize = inventory.getSizeInventory();
 			ItemStack destStack;
 
+			int originalAmount = stack.stackSize;
 			int amountLeft = stack.stackSize;
 			int amountToSet;
 			int i = (slot > 0 && slot < invSize ? slot : 0);
@@ -43,30 +43,36 @@ public class Utils {
 					// check amount to send, based on stack limit
 					amountToSet = Math.min(amountLeft, inventory.getInventoryStackLimit());
 					// set distant slot content
-					inventory.setInventorySlotContents(i, new ItemStack(stack.getItem(), amountToSet));
+					ItemStack newStack = stack.copy();
+					newStack.stackSize = amountToSet;
+					inventory.setInventorySlotContents(i, newStack);
 					// reduce amount left
 					amountLeft -= inventory.getInventoryStackLimit();
-				} else if (destStack.itemID == stack.itemID) {
+				} else if (destStack.itemID == stack.itemID && (!stack.getHasSubtypes() || stack.getItemDamage() == destStack.getItemDamage()) && ItemStack.areItemStackTagsEqual(stack, destStack)) {
 					// retrieve the space available in that slot
 					int spaceAvailable = (inventory.getInventoryStackLimit() - destStack.stackSize);
 					if (spaceAvailable == 0) continue; // no use going any further
 					// find how much we can set
 					amountToSet = Math.min(destStack.stackSize + spaceAvailable, destStack.stackSize + amountLeft);
 					// send to inventory
-					inventory.setInventorySlotContents(i, new ItemStack(stack.getItem(), amountToSet));
+					destStack.stackSize = amountToSet;
+					//inventory.setInventorySlotContents(i, new ItemStack(stack.getItem(), amountToSet));
 					// reduce amount left
 					amountLeft -= spaceAvailable;
 				}
 			}
 
+			if (amountLeft < 0) amountLeft = 0;
+			stack.stackSize = amountLeft;
+			
 			// if a slot was specified and we could only move part of the stuff, try again from the start
 			if (slot > 0 && amountLeft > 0 && amountLeft != stack.stackSize) {
-				add(new ItemStack(stack.getItem(), amountLeft), 0);
+				stack.stackSize = amountLeft;
+				amountLeft = add(stack, 0);
 			}
 			
 			// no item left
-			if (amountLeft <= 0) return null;
-			return new ItemStack(stack.getItem(), amountLeft);
+			return originalAmount - amountLeft;
 		}
 	}
 }

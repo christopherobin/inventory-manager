@@ -3,7 +3,6 @@ package com.bombstrike.cc.invmanager.compat;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -46,11 +45,10 @@ public class ComputerCraft {
 			} else if (neighbor instanceof IInventory) {
 				IInventory inventory = (IInventory)neighbor;
 				Utils.Manager manager = Utils.getInventoryManager(inventory);
-				ItemStack leftover = manager.add(stack);
+				amountExtracted = manager.add(stack);
 				// send back any extra
-				if (leftover != null) {
-					amountExtracted = stack.stackSize - leftover.stackSize;
-					from.setInventorySlotContents(position, leftover);
+				if (stack.stackSize > 0) {
+					from.setInventorySlotContents(position, stack);
 				}
 			}
 
@@ -99,12 +97,11 @@ public class ComputerCraft {
 			int amountExtracted = stack.stackSize;
 			// send it to the player
 			Utils.Manager manager = Utils.getInventoryManager(target);
-			ItemStack leftover = manager.add(stack);
+			amountExtracted = manager.add(stack);
 
 			// send back any extra
-			if (leftover != null) {
-				amountExtracted = stack.stackSize - leftover.stackSize;
-				inventory.setInventorySlotContents(from, leftover);
+			if (stack.stackSize > 0) {
+				inventory.setInventorySlotContents(from, stack);
 			}
 
 			Map<String, Object> itemInfo = new HashMap<String, Object>();
