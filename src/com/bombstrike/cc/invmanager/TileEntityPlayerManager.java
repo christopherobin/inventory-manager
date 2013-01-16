@@ -3,8 +3,10 @@ package com.bombstrike.cc.invmanager;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.Packet250CustomPayload;
@@ -22,12 +24,10 @@ import dan200.computer.api.IPeripheral;
 public class TileEntityPlayerManager extends TileEntity implements IPeripheral, IPipeEntry {
 	// available methods
 	private String[] methodList = {
-			"inventory",
 			"size",
 			"read",
 			"equipped",
-			"export",
-			"import"
+			"move"
 	};
 	private EntityPlayer player = null;
 	private IComputerAccess computer = null;
@@ -55,6 +55,15 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	
 	public EntityPlayer getPlayer() {
 		return this.player;
+	}
+	
+	public IInventory getInventory(String name) throws Exception {
+		// the plate is only compatible with player and down directions
+		if (name.equals("player") || name.equals("down")) {
+			return Utils.getInventory(this, name);
+		}
+
+		return null;
 	}
 	
 	@Override
@@ -107,26 +116,18 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 			Object[] arguments) throws Exception {
 		// resolve calls
 		switch (method) {
-		case 0: // inventory
-			
-		case 1: // size
-			if (!isPlayerOn()) throw new Exception("no player connected");
-			return new Integer[]{player.inventory.getSizeInventory()};
-		case 2: // inventory <int:slot>
-			if (!isPlayerOn()) throw new Exception("no player connected");
-			return cc.readInventory(arguments, player.inventory);
-		case 3: // equipped
+		case 0: // size
+			return cc.size(arguments);
+		case 1: // inventory <int:slot>
+			return cc.read(arguments);
+		case 2: // equipped
 			if (!isPlayerOn()) throw new Exception("no player connected");
 			return new Integer[]{player.inventory.currentItem};
-		case 4: // export
-			if (!isPlayerOn()) throw new Exception("no player connected");
-			return cc.exportItem(arguments, player.inventory);
-		case 5: // import
-			if (!isPlayerOn()) throw new Exception("no player connected");
-			return cc.importItem(arguments, player.inventory);
+		case 3: // export
+			return cc.move(arguments);
+		default:
+			throw new Exception("unknown method");
 		}
-		
-		return null;
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import buildcraft.api.transport.IPipeEntry;
 
 import com.bombstrike.cc.invmanager.TileEntityPlayerManager;
 import com.bombstrike.cc.invmanager.Utils;
+import com.bombstrike.cc.invmanager.Utils.Manager;
 
 // those are the methods called from computer craft
 public class ComputerCraft {
@@ -20,115 +21,93 @@ public class ComputerCraft {
 		tileEntity = entity;
 	}
 	
-	public Object[] exportItem(Object[] arguments, IInventory from) throws Exception {
-		int size = from.getSizeInventory();
+	public Object[] move(Object[] arguments) throws Exception {
+		// variables
+		IInventory source;
+		IInventory target;
+		int sourceSlot, targetSlot = 0, quantity;
 		
-		if (arguments.length == 0 || !(arguments[0] instanceof Double)) {
-			throw new Exception("missing/invalid argument: slot (int)");
+		// parse aguments
+		if (arguments.length < 3) {
+			throw new Exception("missing arguments");
 		}
 		
-		int position = ((Double)arguments[0]).intValue();
-		// out of bounds
-		if (position < 0 || position >= size) throw new Exception("inventory indice out of bounds");
-		// do we have a valid target?
-		TileEntity neighbor = tileEntity.worldObj.getBlockTileEntity(tileEntity.xCoord, tileEntity.yCoord-1, tileEntity.zCoord);
-		if (!(neighbor instanceof IInventory) && !(neighbor instanceof IPipeEntry)) throw new Exception("bottom block is not an inventory nor a pipe"); // no valid target :(
-		// if a pipe, does it accept items?
-		if (neighbor instanceof IPipeEntry && !((IPipeEntry)neighbor).acceptItems()) throw new Exception("this pipe cannot accept items");
-		// retrieve details
-		ItemStack stack = from.decrStackSize(position, 64);
-		if (stack != null) {
-			int amountExtracted = stack.stackSize;
-			// send it to our neighbor
-			if (neighbor instanceof IPipeEntry) {
-				((IPipeEntry)neighbor).entityEntering(stack, ForgeDirection.DOWN);
-			} else if (neighbor instanceof IInventory) {
-				IInventory inventory = (IInventory)neighbor;
-				Utils.Manager manager = Utils.getInventoryManager(inventory);
-				amountExtracted = manager.add(stack);
-				// send back any extra
-				if (stack.stackSize > 0) {
-					from.setInventorySlotContents(position, stack);
-				}
+		// source inventory
+		if (!(arguments[0] instanceof String)) throw new Exception("invalid argument for source inventory");
+		source = tileEntity.getInventory((String)arguments[0]);
+		if (source == null) throw new Exception("the inventory \"" + (String)arguments[0] + "\" doesn't exists");
+		// set the default quantity value to be the size of a stack
+		quantity = source.getInventoryStackLimit();
+		
+		// source slot
+		if (!(arguments[1] instanceof Double)) throw new Exception("invalid argument for source inventory slot");
+		sourceSlot = ((Double)arguments[1]).intValue();
+		if (sourceSlot < 0 || sourceSlot >= source.getSizeInventory()) throw new Exception("source slot indice out of bounds");
+		
+		// target inventory
+		if (!(arguments[2] instanceof String)) throw new Exception("invalid argument for target inventory");
+		target = tileEntity.getInventory((String)arguments[2]);
+		if (target == null) throw new Exception("the inventory \"" + (String)arguments[2] + "\" doesn't exists");
+		
+		// target slot
+		if (arguments.length > 3) {
+			if (!(arguments[3] instanceof Double)) throw new Exception("invalid argument for target inventory slot");
+			targetSlot = ((Double)arguments[3]).intValue();
+			if (targetSlot < 0 || targetSlot >= target.getSizeInventory()) throw new Exception("target slot indice out of bounds");
+		}
+		
+		// quantity
+		if (arguments.length > 4) {
+			if (!(arguments[4] instanceof Double)) throw new Exception("invalid argument for quantity");
+			quantity = ((Double)arguments[4]).intValue();
+			if (quantity < 1 || quantity > source.getInventoryStackLimit()) quantity = source.getInventoryStackLimit();
+		}
+		
+		ItemStack sourceStack = source.getStackInSlot(sourceSlot);
+		if (sourceStack != null) {
+			Manager manager = Utils.getInventoryManager(target);
+			int moved = manager.add(sourceStack, targetSlot, quantity);
+			// remove stack from source inventory if necessary
+			if (sourceStack.stackSize == 0) {
+				source.setInventorySlotContents(sourceSlot, null);
 			}
-
+			
 			Map<String, Object> itemInfo = new HashMap<String, Object>();
-			itemInfo.put("id", stack.itemID);
-			itemInfo.put("amount", stack.stackSize);
-			itemInfo.put("exported", amountExtracted);
-			itemInfo.put("name", stack.getItemName());
-			itemInfo.put("display", stack.getDisplayName());
-			itemInfo.put("damage", stack.getItemDamage());
+			itemInfo.put("id", sourceStack.itemID);
+			itemInfo.put("amount", sourceStack.stackSize);
+			itemInfo.put("moved", moved);
+			itemInfo.put("name", sourceStack.getItemName());
+			itemInfo.put("display", sourceStack.getDisplayName());
+			itemInfo.put("damage", sourceStack.getItemDamage());
 			
 			return new Object[]{itemInfo};
 		}
-		return new Integer[]{0, 0};
+		
+		return new Integer[]{};
 	}
-	
-	public Object[] importItem(Object[] arguments, IInventory target) throws Exception {
-		int size = target.getSizeInventory();
-		
-		if (arguments.length == 0 || !(arguments[0] instanceof Double)) {
-			throw new Exception("missing/invalid argument: from (int)");
-		}
-		
-		int from = ((Double)arguments[0]).intValue();
-		// out of bounds
-		int to = -1;
-		if (arguments.length > 1) {
-			if (!(arguments[1] instanceof Double)) {
-				throw new Exception("missing/invalid argument: to (int)");
-			}
-			to = ((Double)arguments[1]).intValue();
-		}
-		if (to < 0 || to >= size) throw new Exception("target indice out of bounds");
-		// do we have a valid target?
-		TileEntity neighbor = tileEntity.worldObj.getBlockTileEntity(tileEntity.xCoord, tileEntity.yCoord-1, tileEntity.zCoord);
-		if (neighbor instanceof IPipeEntry) throw new Exception("cannot manually import from a pipe");
-		if (!(neighbor instanceof IInventory)) throw new Exception("bottom block is not an inventory"); // no valid target :(
-		// retrieve neighbor inventory
-		IInventory inventory = (IInventory)neighbor;
-		int invSize = inventory.getSizeInventory();
-		if (from < 0 || from >= invSize) throw new Exception("inventory indice out of bounds");
 
+	public Object[] read(Object[] arguments) throws Exception {
+		// variables
+		IInventory source;
+		int sourceSlot;
+		
+		// parse aguments
+		if (arguments.length < 2) {
+			throw new Exception("missing arguments");
+		}
+		
+		// source inventory
+		if (!(arguments[0] instanceof String)) throw new Exception("invalid argument for source inventory");
+		source = tileEntity.getInventory((String)arguments[0]);
+		if (source == null) throw new Exception("the inventory \"" + (String)arguments[0] + "\" doesn't exists");
+		
+		// source slot
+		if (!(arguments[1] instanceof Double)) throw new Exception("invalid argument for source inventory slot");
+		sourceSlot = ((Double)arguments[1]).intValue();
+		if (sourceSlot < 0 || sourceSlot >= source.getSizeInventory()) throw new Exception("source slot indice out of bounds");
+		
 		// retrieve details
-		ItemStack stack = inventory.decrStackSize(from, 64);
-		if (stack != null) {
-			int amountExtracted = stack.stackSize;
-			// send it to the player
-			Utils.Manager manager = Utils.getInventoryManager(target);
-			amountExtracted = manager.add(stack);
-
-			// send back any extra
-			if (stack.stackSize > 0) {
-				inventory.setInventorySlotContents(from, stack);
-			}
-
-			Map<String, Object> itemInfo = new HashMap<String, Object>();
-			itemInfo.put("id", stack.itemID);
-			itemInfo.put("amount", stack.stackSize);
-			itemInfo.put("imported", amountExtracted);
-			itemInfo.put("name", stack.getItemName());
-			itemInfo.put("display", stack.getDisplayName());
-			itemInfo.put("damage", stack.getItemDamage());
-
-			return new Object[]{itemInfo};
-		}
-		return new Integer[]{0, 0};
-	}
-	
-	public Object[] readInventory(Object[] arguments, IInventory target) throws Exception {
-		int size = target.getSizeInventory();
-		
-		if (arguments.length == 0 || !(arguments[0] instanceof Double)) {
-			throw new Exception("missing/invalid argument: slot (int)");
-		}
-		
-		int position = ((Double)arguments[0]).intValue();
-		// out of bounds
-		if (position < 0 || position >= size) throw new Exception("inventory indice out of bounds");;
-		// retrieve details
-		ItemStack stack = target.getStackInSlot(position);
+		ItemStack stack = source.getStackInSlot(sourceSlot);
 		if (stack != null) {
 			Map<String, Object> itemInfo = new HashMap<String, Object>();
 			itemInfo.put("id", stack.itemID);
@@ -142,4 +121,20 @@ public class ComputerCraft {
 		return new Integer[]{0, 0};
 	}
 
+	public Object[] size(Object[] arguments) throws Exception {
+		// variables
+		IInventory source;
+		
+		// parse aguments
+		if (arguments.length < 1) {
+			throw new Exception("missing arguments");
+		}
+		
+		// source inventory
+		if (!(arguments[0] instanceof String)) throw new Exception("invalid argument for source inventory");
+		source = tileEntity.getInventory((String)arguments[0]);
+		if (source == null) throw new Exception("the inventory \"" + (String)arguments[0] + "\" doesn't exists");
+		
+		return new Integer[]{source.getSizeInventory()};
+	}
 }
