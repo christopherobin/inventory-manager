@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -21,7 +22,7 @@ import com.bombstrike.cc.invmanager.compat.ComputerCraft;
 import dan200.computer.api.IComputerAccess;
 import dan200.computer.api.IPeripheral;
 
-public class TileEntityPlayerManager extends TileEntity implements IPeripheral, IPipeEntry {
+public class TileEntityPlayerManager extends TileEntity implements IPeripheral, IPipeEntry, IInventory {
 	// available methods
 	private String[] methodList = {
 			"size",
@@ -48,6 +49,14 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 		// tell the computer
 		if (computer != null) {
 			computer.queueEvent("playerAvailable");
+		}
+		
+		// actually tell everyone
+		for (ForgeDirection direction: ForgeDirection.VALID_DIRECTIONS) {
+			int blockId = Utils.getBlockNeighbor(worldObj, xCoord, yCoord, zCoord, direction);
+			if (blockId > 0 && Block.blocksList[blockId] != null) {
+				Block.blocksList[blockId].onNeighborBlockChange(worldObj, xCoord, yCoord, zCoord, blockId);
+			}
 		}
 
 		return this;
@@ -177,5 +186,80 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	@Override
 	public boolean acceptItems() {
 		return false;
+	}
+
+	@Override
+	public int getSizeInventory() {
+		if (isPlayerOn()) {
+			return player.inventory.getSizeInventory() - 4; // don't give access to armor
+		}
+		return 0;
+	}
+
+	@Override
+	public ItemStack getStackInSlot(int var1) {
+		if (isPlayerOn()) {
+			return player.inventory.getStackInSlot(var1);
+		}
+		return null;
+	}
+
+	@Override
+	public ItemStack decrStackSize(int var1, int var2) {
+		if (isPlayerOn()) {
+			return player.inventory.decrStackSize(var1, var2);
+		}
+		return null;
+	}
+
+	@Override
+	public ItemStack getStackInSlotOnClosing(int var1) {
+		if (isPlayerOn()) {
+			return player.inventory.getStackInSlotOnClosing(var1);
+		}
+		return null;
+	}
+
+	@Override
+	public void setInventorySlotContents(int var1, ItemStack var2) {
+		if (isPlayerOn()) {
+			player.inventory.setInventorySlotContents(var1, var2);
+		}
+	}
+
+	@Override
+	public String getInvName() {
+		if (isPlayerOn()) {
+			return player.inventory.getInvName();
+		}
+		return null;
+	}
+
+	@Override
+	public int getInventoryStackLimit() {
+		if (isPlayerOn()) {
+			return player.inventory.getInventoryStackLimit();
+		}
+		return 0;
+	}
+
+	@Override
+	public boolean isUseableByPlayer(EntityPlayer var1) {
+		if (isPlayerOn()) {
+			return player.inventory.isUseableByPlayer(var1);
+		}
+		return false;
+	}
+
+	@Override
+	public void openChest() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void closeChest() {
+		// TODO Auto-generated method stub
+		
 	}
 }
