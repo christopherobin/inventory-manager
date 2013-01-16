@@ -23,7 +23,7 @@ public class BlockPlayerManager extends BlockContainer {
 		setBlockName("Player Manager Peripheral");
 		setHardness(3.0F);
 		setStepSound(soundMetalFootstep);
-		setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F/8.0F, 1.0F);
+		setBlockBounds(1.0F/16.0F, 0.0F, 1.0F/16.0F, 15.0F/16.0F, 1.0F/8.0F, 15.0F/16.0F);
 		setCreativeTab(CreativeTabs.tabRedstone);
 		setRequiresSelfNotify();
 

@@ -91,6 +91,7 @@ public class Utils {
 					if (inventory.getStackInSlot(slot) != null) return false;
 				}
 			}
+			
 			return true;
 		}
 		
