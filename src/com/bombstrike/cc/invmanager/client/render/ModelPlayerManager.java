@@ -1,4 +1,5 @@
-package com.bombstrike.cc.invmanager.client;
+package com.bombstrike.cc.invmanager.client.render;
+
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;

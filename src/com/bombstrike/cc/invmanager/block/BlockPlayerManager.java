@@ -1,6 +1,10 @@
-package com.bombstrike.cc.invmanager;
+package com.bombstrike.cc.invmanager.block;
 
 import java.util.Random;
+
+import com.bombstrike.cc.invmanager.InventoryManager;
+import com.bombstrike.cc.invmanager.Utils;
+import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
@@ -20,7 +24,7 @@ public class BlockPlayerManager extends BlockContainer {
 	
 	public BlockPlayerManager(int blockId) {
 		super(blockId, Material.iron);
-		setBlockName("Player Manager Peripheral");
+		setBlockName("playerManagerPeripheral");
 		setHardness(3.0F);
 		setStepSound(soundMetalFootstep);
 		setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F/8.0F, 1.0F);
@@ -35,10 +39,14 @@ public class BlockPlayerManager extends BlockContainer {
 	}
 
 	@Override
-	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer par5EntityPlayer, int par6, float par7, float par8, float par9)
+	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int par6, float par7, float par8, float par9)
     {
-		// for now return false
-        return false;
+		TileEntity te = world.getBlockTileEntity(x, y, z);
+		if (te == null || player.isSneaking()) {
+			return false;
+		}
+		player.openGui(InventoryManager.instance, 0, world, x, y, z);
+        return true;
     }
 	
 	@Override

@@ -1,4 +1,4 @@
-package com.bombstrike.cc.invmanager.client;
+package com.bombstrike.cc.invmanager.client.render;
 
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
@@ -6,7 +6,8 @@ import net.minecraftforge.client.ForgeHooksClient;
 
 import org.lwjgl.opengl.GL11;
 
-import com.bombstrike.cc.invmanager.TileEntityPlayerManager;
+import com.bombstrike.cc.invmanager.InventoryManager;
+import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
 public class TileEntityPlayerManagerRenderer extends TileEntitySpecialRenderer {
 	private ModelPlayerManager model = new ModelPlayerManager();
@@ -22,19 +23,29 @@ public class TileEntityPlayerManagerRenderer extends TileEntitySpecialRenderer {
 	public void renderTileEntityAt(TileEntity entity, double x, double y,
 			double z, float partialTicks) {
 		if (entity instanceof TileEntityPlayerManager) {
-			int metadata = entity.getBlockMetadata();
-			render(x, y, z, (metadata & 0x8) > 0, ((TileEntityPlayerManager)entity).getConnections());
+			TileEntityPlayerManager playerManagerEntity = (TileEntityPlayerManager)entity;
+			int metadata = playerManagerEntity.getBlockMetadata();
+			
+			STATUS status = STATUS.OFFLINE;
+			if (playerManagerEntity.hasFuel()) {
+				status = STATUS.ONLINE;
+				if ((metadata & 0x8) > 0) {
+					status = STATUS.ACTIVE;
+				}
+			}
+			render(x, y, z, status, ((TileEntityPlayerManager)entity).getConnections());
 		} else {
-			render(x, y, z, false, 0x0);
+			render(x, y, z, STATUS.ONLINE, 0x0);
 		}
 	}
 	
-	public void render(double x, double y, double z, boolean lit, int connections) {
+	public void render(double x, double y, double z, STATUS status, int connections) {
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		
 		ForgeHooksClient.bindTexture("/com/bombstrike/cc/invmanager/gfx/blocks.png", 0);
-		model.render(1.0F/16.0F, (lit && (connections > 0) ? STATUS.ACTIVE : (connections != 0 ? STATUS.ONLINE : STATUS.OFFLINE)), connections);
+		
+		model.render(1.0F/16.0F, status, connections);
 
 		GL11.glPopMatrix();
 	}

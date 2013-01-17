@@ -4,13 +4,17 @@ import java.util.logging.Logger;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.Property;
 
+import com.bombstrike.cc.invmanager.block.BlockPlayerManager;
 import com.bombstrike.cc.invmanager.client.PacketHandler;
+import com.bombstrike.cc.invmanager.client.gui.GuiHandler;
+import com.bombstrike.cc.invmanager.item.ItemCatalyst;
+import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
-import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.Init;
 import cpw.mods.fml.common.Mod.Instance;
@@ -24,7 +28,6 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
-import dan200.computer.api.ComputerCraftAPI;
 
 @Mod(modid="invmanager-peripheral", name=InventoryManager.MODNAME, version="1.0", dependencies="required-after:Forge@[6.3.0.0,)")
 @NetworkMod(clientSideRequired=false, serverSideRequired=true, channels={InventoryManager.CHANNEL}, packetHandler = PacketHandler.class)
@@ -37,12 +40,12 @@ public class InventoryManager
 	// static stuff
 	@SidedProxy(clientSide="com.bombstrike.cc.invmanager.client.ClientProxy", serverSide="com.bombstrike.cc.invmanager.CommonProxy")
 	public static CommonProxy proxy;
-	@Instance("InventoryManager")
+	@Instance("invmanager-peripheral")
 	public static InventoryManager instance;
 	public static Logger logger;
-	public int blockPMid;
-	public static BlockPlayerManager blockPM;
-	public static ItemPlayerManager itemPM;
+	//public static int blockPlayerManagerId;
+	public static BlockPlayerManager blockPlayerManager;
+	public static ItemCatalyst itemCatalyst;
 	public static int renderId;
 	
 	@PreInit
@@ -55,9 +58,14 @@ public class InventoryManager
 		try {
 			cfg.load();
 			// retrieve our block info
-			Property blockPMprop = cfg.getBlock("playerManager", 1250);
-			blockPMprop.comment = "The block ID for the player manager peripheral";
-			blockPMid = blockPMprop.getInt(1250);
+			Property blockPlayerManagerProperty = cfg.getBlock("playerManager", 1250);
+			blockPlayerManagerProperty.comment = "The block ID for the player manager peripheral";
+			blockPlayerManager = new BlockPlayerManager(blockPlayerManagerProperty.getInt(1250));
+			
+			Property itemCatalystProperty = cfg.getItem("itemCatalyst", 5500);
+			itemCatalystProperty.comment = "The catalyst item for the plate";
+			itemCatalyst = new ItemCatalyst(itemCatalystProperty.getInt(5500));
+			
 		} catch (Exception e) {
 			logger.severe(MODNAME + " encountered an exception while trying to access it's configuration file:\n" + e);
 		} finally {
@@ -69,11 +77,14 @@ public class InventoryManager
 	public void init(FMLInitializationEvent init)
 	{
 		// create blocks
-		blockPM = new BlockPlayerManager(blockPMid);
+		//blockPlayerManager = new BlockPlayerManager(blockPlayerManagerId);
 		// have fun with the registry
-		GameRegistry.registerBlock(blockPM, ItemPlayerManager.class, blockPM.getBlockName());
-		GameRegistry.registerTileEntity(TileEntityPlayerManager.class, "tile." + blockPM.getBlockName());
-		LanguageRegistry.addName(blockPM, "Player Manager Peripheral");
+		GameRegistry.registerBlock(blockPlayerManager, ItemBlock.class, blockPlayerManager.getBlockName());
+		GameRegistry.registerTileEntity(TileEntityPlayerManager.class, blockPlayerManager.getBlockName());
+		LanguageRegistry.addName(blockPlayerManager, "Player Manager Peripheral");
+		
+		GameRegistry.registerItem(itemCatalyst, itemCatalyst.getItemName());
+		LanguageRegistry.addName(itemCatalyst, "Inventory Catalyst");
 
 		proxy.registerRenderInformation();
 		proxy.registerTileEntityRenderers();
@@ -84,7 +95,9 @@ public class InventoryManager
 	@PostInit
 	public void postInit(FMLPostInitializationEvent postInit)
 	{
-		GameRegistry.addRecipe(new ItemStack(blockPM, 1), "ttt", "rer", "ppp", 't', Block.thinGlass, 'r', Item.redstone, 'e', Item.enderPearl, 'p', Block.stoneSingleSlab);
+		NetworkRegistry.instance().registerGuiHandler(this, new GuiHandler());
+		GameRegistry.addRecipe(new ItemStack(blockPlayerManager, 1), "ttt", "rer", "ppp", 't', Block.thinGlass, 'r', Item.redstone, 'e', Item.enderPearl, 'p', Block.stoneSingleSlab);
+		GameRegistry.addRecipe(new ItemStack(itemCatalyst, 1), "lrl", "rpr", "lrl", 'l', Block.oreLapis, 'r', Item.redstone, 'g', Item.enderPearl);
 	}
 }
 

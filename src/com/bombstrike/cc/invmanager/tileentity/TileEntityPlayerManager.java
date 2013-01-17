@@ -1,4 +1,4 @@
-package com.bombstrike.cc.invmanager;
+package com.bombstrike.cc.invmanager.tileentity;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -9,6 +9,9 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagInt;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.Packet250CustomPayload;
 import net.minecraft.tileentity.TileEntity;
@@ -16,27 +19,33 @@ import net.minecraftforge.common.ForgeDirection;
 import buildcraft.api.transport.IPipeEntry;
 import buildcraft.api.transport.IPipedItem;
 
+import com.bombstrike.cc.invmanager.InventoryManager;
+import com.bombstrike.cc.invmanager.Utils;
 import com.bombstrike.cc.invmanager.client.PacketHandler;
 import com.bombstrike.cc.invmanager.compat.ComputerCraft;
+import com.bombstrike.cc.invmanager.inventory.InventoryPlayerManager;
+import com.bombstrike.cc.invmanager.item.ItemCatalyst;
 
 import dan200.computer.api.IComputerAccess;
 import dan200.computer.api.IPeripheral;
 
 public class TileEntityPlayerManager extends TileEntity implements IPeripheral, IPipeEntry, IInventory {
 	// available methods
-	private String[] methodList = {
+	protected String[] methodList = {
 			"size",
 			"read",
 			"equipped",
 			"move"
 	};
-	private EntityPlayer player = null;
-	private IComputerAccess computer = null;
-	private ComputerCraft cc;
-	private int connections = 0;
+	protected EntityPlayer player = null;
+	protected IComputerAccess computer = null;
+	protected ComputerCraft cc;
+	protected int connections = 0;
+	protected InventoryPlayerManager inventory;
 	
 	public TileEntityPlayerManager() {
 		cc = new ComputerCraft(this);
+		inventory = new InventoryPlayerManager();
 	}
 	
 	public boolean isPlayerOn() {
@@ -55,7 +64,7 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 		for (ForgeDirection direction: ForgeDirection.VALID_DIRECTIONS) {
 			int blockId = Utils.getBlockNeighbor(worldObj, xCoord, yCoord, zCoord, direction);
 			if (blockId > 0 && Block.blocksList[blockId] != null) {
-				Block.blocksList[blockId].onNeighborBlockChange(worldObj, xCoord, yCoord, zCoord, blockId);
+				Block.blocksList[blockId].onNeighborBlockChange(worldObj, xCoord + direction.offsetX, yCoord + direction.offsetY, zCoord + direction.offsetZ, blockId);
 			}
 		}
 
@@ -66,7 +75,24 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 		return this.player;
 	}
 	
-	public IInventory getInventory(String name) throws Exception {
+	public InventoryPlayerManager getInventory() {
+		return inventory;
+	}
+	
+	public boolean hasFuel() {
+		// if we are connected to a computer
+		if (connections > 0) {
+			return true;
+		}
+		
+		if (inventory.getStackInSlot(0) != null && inventory.getStackInSlot(0).getItem() instanceof ItemCatalyst) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public IInventory resolveInventory(String name) throws Exception {
 		// the plate is only compatible with player and down directions
 		if (name.equals("player") || name.equals("down")) {
 			return Utils.getInventory(this, name);
@@ -87,15 +113,13 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	
 	@Override
 	public Packet getDescriptionPacket() {
-		ByteArrayOutputStream data = new ByteArrayOutputStream(Integer.SIZE * 5);
+		ByteArrayOutputStream data = new ByteArrayOutputStream(64);
 		DataOutputStream writer = new DataOutputStream(data);
 
 		try {
-			writer.writeUTF(PacketHandler.PACKET.TILEDESCRIPTION.name());
-			writer.writeInt(xCoord);
-			writer.writeInt(yCoord);
-			writer.writeInt(zCoord);
-			writer.writeInt(connections);
+			NBTTagCompound tile = new NBTTagCompound(PacketHandler.PACKET.TILEDESCRIPTION.name());
+			writeToNBT(tile);
+			NBTTagCompound.writeNamedTag(tile, writer);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
@@ -190,46 +214,48 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 
 	@Override
 	public int getSizeInventory() {
-		if (isPlayerOn()) {
-			return player.inventory.getSizeInventory() - 4; // don't give access to armor
+		if (isPlayerOn() && hasFuel()) {
+			return getPlayer().inventory.getSizeInventory() - 4; // don't give access to armor
 		}
 		return 0;
 	}
 
 	@Override
 	public ItemStack getStackInSlot(int var1) {
-		if (isPlayerOn()) {
-			return player.inventory.getStackInSlot(var1);
+		if (isPlayerOn() && hasFuel()) {
+			return getPlayer().inventory.getStackInSlot(var1);
 		}
 		return null;
 	}
 
 	@Override
-	public ItemStack decrStackSize(int var1, int var2) {
-		if (isPlayerOn()) {
-			return player.inventory.decrStackSize(var1, var2);
+	public ItemStack decrStackSize(int slot, int amount) {
+		if (isPlayerOn() && hasFuel()) {
+			inventory.getStackInSlot(0).damageItem(amount, null);
+			return getPlayer().inventory.decrStackSize(slot, amount);
 		}
 		return null;
 	}
 
 	@Override
 	public ItemStack getStackInSlotOnClosing(int var1) {
-		if (isPlayerOn()) {
+		if (isPlayerOn() && hasFuel()) {
 			return player.inventory.getStackInSlotOnClosing(var1);
 		}
 		return null;
 	}
 
 	@Override
-	public void setInventorySlotContents(int var1, ItemStack var2) {
-		if (isPlayerOn()) {
-			player.inventory.setInventorySlotContents(var1, var2);
+	public void setInventorySlotContents(int slot, ItemStack stack) {
+		if (isPlayerOn() && hasFuel()) {
+			inventory.getStackInSlot(0).damageItem(stack.stackSize, null);
+			player.inventory.setInventorySlotContents(slot, stack);
 		}
 	}
 
 	@Override
 	public String getInvName() {
-		if (isPlayerOn()) {
+		if (isPlayerOn() && hasFuel()) {
 			return player.inventory.getInvName();
 		}
 		return null;
@@ -237,18 +263,15 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 
 	@Override
 	public int getInventoryStackLimit() {
-		if (isPlayerOn()) {
+		if (isPlayerOn() && hasFuel()) {
 			return player.inventory.getInventoryStackLimit();
 		}
 		return 0;
 	}
 
 	@Override
-	public boolean isUseableByPlayer(EntityPlayer var1) {
-		if (isPlayerOn()) {
-			return player.inventory.isUseableByPlayer(var1);
-		}
-		return false;
+	public boolean isUseableByPlayer(EntityPlayer player) {
+		return this.worldObj.getBlockTileEntity(this.xCoord, this.yCoord, this.zCoord) != this ? false : player.getDistanceSq((double)this.xCoord + 0.5D, (double)this.yCoord + 0.5D, (double)this.zCoord + 0.5D) <= 64.0D;
 	}
 
 	@Override
@@ -261,5 +284,43 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	public void closeChest() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public void writeToNBT(NBTTagCompound nbtData) {
+		NBTTagList nbtInventory = new NBTTagList("inventory");
+		for (int i = 0; i < inventory.getSizeInventory(); i++) {
+			ItemStack stack = inventory.getStackInSlot(i);
+			if (stack != null) {
+				NBTTagCompound nbtStack = new NBTTagCompound();
+				stack.writeToNBT(nbtStack);
+				nbtStack.setInteger("slot", i);
+				nbtInventory.appendTag(nbtStack);
+			}
+		}
+		nbtData.setTag("inventory", nbtInventory);
+		nbtData.setInteger("connections", connections);
+		super.writeToNBT(nbtData);
+	}
+	
+	@Override
+	public void readFromNBT(NBTTagCompound nbtData) {
+		super.readFromNBT(nbtData);
+		if (nbtData.hasKey("inventory")) {
+			NBTTagList list = (NBTTagList)nbtData.getTag("inventory");
+			for (int i = 0; i < inventory.getSizeInventory() && i < list.tagCount(); i++) {
+				if (list.tagAt(i) instanceof NBTTagCompound) {
+					NBTTagCompound nbtStack = (NBTTagCompound)list.tagAt(i);
+					int slot = nbtStack.getInteger("slot");
+					ItemStack stack = ItemStack.loadItemStackFromNBT(nbtStack);
+					if (stack != null) {
+						inventory.setInventorySlotContents(slot, stack);
+					}
+				}
+			}
+		}
+		if (nbtData.hasKey("connections")) {
+			connections = nbtData.getInteger("connections");
+		}
 	}
 }
