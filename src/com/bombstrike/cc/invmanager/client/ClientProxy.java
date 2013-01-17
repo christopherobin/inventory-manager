@@ -6,7 +6,9 @@ import net.minecraftforge.client.MinecraftForgeClient;
 
 import com.bombstrike.cc.invmanager.CommonProxy;
 import com.bombstrike.cc.invmanager.InventoryManager;
-import com.bombstrike.cc.invmanager.TileEntityPlayerManager;
+import com.bombstrike.cc.invmanager.client.render.PlayerManagerRenderHandler;
+import com.bombstrike.cc.invmanager.client.render.TileEntityPlayerManagerRenderer;
+import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
@@ -28,7 +30,11 @@ public class ClientProxy extends CommonProxy {
 	@Override
 	public void registerRenderInformation() {
 		super.registerRenderInformation();
-		MinecraftForgeClient.preloadTexture("/bombstrike/playermanager/blocks.png");
+
+		// preload textures
+		MinecraftForgeClient.preloadTexture("/com/bombstrike/cc/invmanager/gfx/blocks.png");
+		MinecraftForgeClient.preloadTexture("/com/bombstrike/cc/invmanager/gfx/items.png");
+		MinecraftForgeClient.preloadTexture("/com/bombstrike/cc/invmanager/gfx/plate.png");
 	}
 	
 	@Override

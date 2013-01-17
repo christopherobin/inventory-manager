@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
@@ -42,7 +44,7 @@ public class Utils {
 		return neighbor;
 	}
 	
-	static IInventory getInventory(TileEntityPlayerManager entity, String name) throws Exception {
+	static public IInventory getInventory(TileEntityPlayerManager entity, String name) throws Exception {
 		if (name.contentEquals("player")) {
 			if (entity.isPlayerOn()) {
 				return entity.getPlayer().inventory;

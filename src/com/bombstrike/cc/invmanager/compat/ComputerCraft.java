@@ -9,9 +9,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.ForgeDirection;
 import buildcraft.api.transport.IPipeEntry;
 
-import com.bombstrike.cc.invmanager.TileEntityPlayerManager;
 import com.bombstrike.cc.invmanager.Utils;
 import com.bombstrike.cc.invmanager.Utils.Manager;
+import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
 // those are the methods called from computer craft
 public class ComputerCraft {
@@ -34,7 +34,7 @@ public class ComputerCraft {
 		
 		// source inventory
 		if (!(arguments[0] instanceof String)) throw new Exception("invalid argument for source inventory");
-		source = tileEntity.getInventory((String)arguments[0]);
+		source = tileEntity.resolveInventory((String)arguments[0]);
 		if (source == null) throw new Exception("the inventory \"" + (String)arguments[0] + "\" doesn't exists");
 		// set the default quantity value to be the size of a stack
 		quantity = source.getInventoryStackLimit();
@@ -46,7 +46,7 @@ public class ComputerCraft {
 		
 		// target inventory
 		if (!(arguments[2] instanceof String)) throw new Exception("invalid argument for target inventory");
-		target = tileEntity.getInventory((String)arguments[2]);
+		target = tileEntity.resolveInventory((String)arguments[2]);
 		if (target == null) throw new Exception("the inventory \"" + (String)arguments[2] + "\" doesn't exists");
 		
 		// target slot
@@ -98,7 +98,7 @@ public class ComputerCraft {
 		
 		// source inventory
 		if (!(arguments[0] instanceof String)) throw new Exception("invalid argument for source inventory");
-		source = tileEntity.getInventory((String)arguments[0]);
+		source = tileEntity.resolveInventory((String)arguments[0]);
 		if (source == null) throw new Exception("the inventory \"" + (String)arguments[0] + "\" doesn't exists");
 		
 		// source slot
@@ -132,7 +132,7 @@ public class ComputerCraft {
 		
 		// source inventory
 		if (!(arguments[0] instanceof String)) throw new Exception("invalid argument for source inventory");
-		source = tileEntity.getInventory((String)arguments[0]);
+		source = tileEntity.resolveInventory((String)arguments[0]);
 		if (source == null) throw new Exception("the inventory \"" + (String)arguments[0] + "\" doesn't exists");
 		
 		return new Integer[]{source.getSizeInventory()};
