@@ -16,8 +16,17 @@ public class ContainerPlayerManager extends Container {
 			TileEntityPlayerManager entity) {
 		this.entity = entity;
 
-		addSlotToContainer(new SlotCatalyst((IInventory) entity.getInventory(), 0, 80,
-				17));
+		// fuel slots
+		addSlotToContainer(new SlotCatalyst((IInventory) entity.getInventory(),
+				0, 80, 17, false));
+		
+		// storage slots
+		addSlotToContainer(new SlotCatalyst((IInventory) entity.getInventory(),
+				1, 44, 17, true));
+		addSlotToContainer(new SlotCatalyst((IInventory) entity.getInventory(),
+				2, 44, 35, true));
+		addSlotToContainer(new SlotCatalyst((IInventory) entity.getInventory(),
+				3, 44, 53, true));
 
 		// bind the player inventory to the interface
 		bindPlayerInventory(inventoryPlayer);
@@ -54,14 +63,14 @@ public class ContainerPlayerManager extends Container {
 			stack = stackInSlot.copy();
 
 			// merges the item into player inventory since its in the tileEntity
-			if (slot < 1) {
-				if (!this.mergeItemStack(stackInSlot, 1, 37, true)) {
+			if (slot < 4) {
+				if (!this.mergeItemStack(stackInSlot, 4, 40, true)) {
 					return null;
 				}
 			}
 			// places it into the tileEntity is possible since its in the player
 			// inventory
-			else if (!this.mergeItemStack(stackInSlot, 0, 1, false)) {
+			else if (!this.mergeItemStack(stackInSlot, 1, 4, false)) {
 				return null;
 			}
 

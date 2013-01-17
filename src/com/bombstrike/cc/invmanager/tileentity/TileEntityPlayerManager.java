@@ -29,7 +29,7 @@ import com.bombstrike.cc.invmanager.item.ItemCatalyst;
 import dan200.computer.api.IComputerAccess;
 import dan200.computer.api.IPeripheral;
 
-public class TileEntityPlayerManager extends TileEntity implements IPeripheral, IPipeEntry, IInventory {
+public class TileEntityPlayerManager extends TileEntity implements IPeripheral, IInventory {
 	// available methods
 	protected String[] methodList = {
 			"size",
@@ -99,6 +99,22 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 		}
 
 		return null;
+	}
+	
+	@Override
+	public void updateEntity() {
+		// if fuel slot is empty, pull from nearby stacks
+		if (inventory.getStackInSlot(0) == null) {
+			for (int i = 1; i <= 3; i++) {
+				if (inventory.getStackInSlot(i) != null) {
+					ItemStack fuel = inventory.decrStackSize(i, 1);
+					if (fuel != null) {
+						inventory.setInventorySlotContents(0, fuel);
+						break;
+					}
+				}
+			}
+		}
 	}
 	
 	@Override
@@ -179,7 +195,7 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 		this.computer = null;
 	}
 
-	@Override
+	/*@Override
 	public void entityEntering(ItemStack payload, ForgeDirection orientation) {
 		// find some room and try to put the item, otherwise send it back
 		if (!isPlayerOn()) {
@@ -210,6 +226,24 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	@Override
 	public boolean acceptItems() {
 		return false;
+	}*/
+	
+	public void damageCatalyst(int damage) {
+		// if connected to a computer, the catalyst is not used
+		if (connections > 0) return;
+		ItemStack fuelStack = inventory.getStackInSlot(0);
+		if (fuelStack != null) {
+			if (fuelStack.isItemStackDamageable()) {
+				fuelStack.setItemDamage(fuelStack.getItemDamage() + damage);
+				if (fuelStack.getItemDamage() > fuelStack.getItem().getMaxDamage()) {
+					fuelStack.stackSize--;
+					fuelStack.setItemDamage(0);
+				}
+				if (fuelStack.stackSize <= 0) {
+					inventory.setInventorySlotContents(0, null);
+				}
+			}
+		}
 	}
 
 	@Override
@@ -231,7 +265,7 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	@Override
 	public ItemStack decrStackSize(int slot, int amount) {
 		if (isPlayerOn() && hasFuel()) {
-			inventory.getStackInSlot(0).damageItem(amount, null);
+			damageCatalyst(amount);
 			return getPlayer().inventory.decrStackSize(slot, amount);
 		}
 		return null;
@@ -248,7 +282,7 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack stack) {
 		if (isPlayerOn() && hasFuel()) {
-			inventory.getStackInSlot(0).damageItem(stack.stackSize, null);
+			damageCatalyst(stack.stackSize);
 			player.inventory.setInventorySlotContents(slot, stack);
 		}
 	}

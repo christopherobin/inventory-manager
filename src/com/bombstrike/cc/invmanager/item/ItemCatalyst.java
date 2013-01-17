@@ -6,11 +6,12 @@ import net.minecraft.item.Item;
 public class ItemCatalyst extends Item {
 	public ItemCatalyst(int itemId) {
 		super(itemId);
-		setMaxDamage(10);
+		setMaxDamage(640);
 		setTextureFile("/com/bombstrike/cc/invmanager/gfx/items.png");
 		setItemName("playerManagerCatalyst");
 		setCreativeTab(CreativeTabs.tabMaterials);
 		setIconIndex(0);
 		setIconCoord(0, 0);
+		setMaxStackSize(16);
 	}
 }

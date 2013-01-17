@@ -10,6 +10,7 @@ import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.util.StatCollector;
 
 public class GuiPlayerManager extends GuiContainer {
 
@@ -17,6 +18,11 @@ public class GuiPlayerManager extends GuiContainer {
 		super(new ContainerPlayerManager(inventory, entity));
 	}
 
+	@Override
+	protected void drawGuiContainerForegroundLayer(int par1, int par2) {
+		this.fontRenderer.drawString(StatCollector.translateToLocal("container.inventory"), 8, this.ySize - 96 + 2, 4210752);
+	}
+	
 	@Override
 	protected void drawGuiContainerBackgroundLayer(float var1, int var2,
 			int var3) {
