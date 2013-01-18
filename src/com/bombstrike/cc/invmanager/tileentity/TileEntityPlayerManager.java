@@ -283,6 +283,9 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	public void setInventorySlotContents(int slot, ItemStack stack) {
 		if (isPlayerOn()) {
 			if (stack == null) {
+				if (player.inventory.getStackInSlot(slot) != null) {
+					damageCatalyst(player.inventory.getStackInSlot(slot).stackSize);
+				}
 				player.inventory.setInventorySlotContents(slot, stack);
 			} else {
 				if (hasFuel()) {
@@ -316,13 +319,11 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 
 	@Override
 	public void openChest() {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void closeChest() {
-		// TODO Auto-generated method stub
 		
 	}
 	

@@ -87,5 +87,95 @@ public class ContainerPlayerManager extends Container {
 		}
 		return stack;
 	}
+	
+	@Override
+	protected boolean mergeItemStack(ItemStack stack, int from, int to, boolean reverse) {
+        boolean result = false;
+        int i = from;
+
+        if (reverse)
+        {
+            i = to - 1;
+        }
+
+        Slot slot;
+        ItemStack targetStack;
+
+        if (stack.isStackable())
+        {
+            while (stack.stackSize > 0 && (!reverse && i < to || reverse && i >= from))
+            {
+                slot = (Slot)this.inventorySlots.get(i);
+                targetStack = slot.getStack();
+
+                if (targetStack != null && targetStack.itemID == stack.itemID && (!stack.getHasSubtypes() || stack.getItemDamage() == targetStack.getItemDamage()) && ItemStack.areItemStackTagsEqual(stack, targetStack))
+                {
+                    int var9 = targetStack.stackSize + stack.stackSize;
+
+                    if (var9 <= stack.getMaxStackSize())
+                    {
+                        stack.stackSize = 0;
+                        targetStack.stackSize = var9;
+                        slot.onSlotChanged();
+                        result = true;
+                    }
+                    else if (targetStack.stackSize < stack.getMaxStackSize())
+                    {
+                        stack.stackSize -= stack.getMaxStackSize() - targetStack.stackSize;
+                        targetStack.stackSize = stack.getMaxStackSize();
+                        slot.onSlotChanged();
+                        result = true;
+                    }
+                }
+
+                if (reverse)
+                {
+                    --i;
+                }
+                else
+                {
+                    ++i;
+                }
+            }
+        }
+
+        if (stack.stackSize > 0)
+        {
+            if (reverse)
+            {
+                i = to - 1;
+            }
+            else
+            {
+                i = from;
+            }
+
+            while (!reverse && i < to || reverse && i >= from)
+            {
+                slot = (Slot)this.inventorySlots.get(i);
+                targetStack = slot.getStack();
+
+                if (targetStack == null && slot.isItemValid(stack))
+                {
+                    slot.putStack(stack.copy());
+                    slot.onSlotChanged();
+                    stack.stackSize = 0;
+                    result = true;
+                    break;
+                }
+
+                if (reverse)
+                {
+                    --i;
+                }
+                else
+                {
+                    ++i;
+                }
+            }
+        }
+
+        return result;
+	}
 
 }
