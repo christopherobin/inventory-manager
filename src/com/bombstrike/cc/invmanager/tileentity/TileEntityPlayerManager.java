@@ -281,9 +281,15 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack stack) {
-		if (isPlayerOn() && hasFuel()) {
-			damageCatalyst(stack.stackSize);
-			player.inventory.setInventorySlotContents(slot, stack);
+		if (isPlayerOn()) {
+			if (stack == null) {
+				player.inventory.setInventorySlotContents(slot, stack);
+			} else {
+				if (hasFuel()) {
+					damageCatalyst(stack.stackSize);
+					player.inventory.setInventorySlotContents(slot, stack);
+				}
+			}
 		}
 	}
 
