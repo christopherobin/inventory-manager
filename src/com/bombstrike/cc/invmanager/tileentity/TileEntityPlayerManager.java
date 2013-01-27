@@ -1,35 +1,33 @@
 package com.bombstrike.cc.invmanager.tileentity;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.HashMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagInt;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.Packet250CustomPayload;
+import net.minecraft.network.packet.Packet132TileEntityData;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.ForgeDirection;
-import buildcraft.api.transport.IPipeEntry;
-import buildcraft.api.transport.IPipedItem;
 
 import com.bombstrike.cc.invmanager.InventoryManager;
 import com.bombstrike.cc.invmanager.Utils;
-import com.bombstrike.cc.invmanager.client.PacketHandler;
 import com.bombstrike.cc.invmanager.compat.ComputerCraft;
-import com.bombstrike.cc.invmanager.inventory.InventoryPlayerManager;
-import com.bombstrike.cc.invmanager.item.ItemCatalyst;
 
 import dan200.computer.api.IComputerAccess;
 import dan200.computer.api.IPeripheral;
 
 public class TileEntityPlayerManager extends TileEntity implements IPeripheral, IInventory {
+	public enum TYPE {
+		BASIC,
+		COMPUTER
+	};
 	// available methods
 	protected String[] methodList = {
 			"size",
@@ -39,20 +37,45 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	};
 	protected EntityPlayer player = null;
 	protected IComputerAccess computer = null;
-	protected ComputerCraft cc;
+	protected ComputerCraft cc = null;
 	protected int connections = 0;
-	protected InventoryPlayerManager inventory;
+	protected TYPE type;
+	protected ConcurrentLinkedQueue<FutureTask<Object[]>> callQueue;
 	
 	public TileEntityPlayerManager() {
-		cc = new ComputerCraft(this);
-		inventory = new InventoryPlayerManager();
+		this(TYPE.BASIC);
+	}
+	
+	public TileEntityPlayerManager(TYPE type) {
+		callQueue = new ConcurrentLinkedQueue<FutureTask<Object[]>>();
+		this.type = type;
+	}
+	
+	public TYPE getPlateType() {
+		return type;
 	}
 	
 	public boolean isPlayerOn() {
 		return (player != null);
 	}
 	
+	public boolean checkMode() {
+		return (type == TYPE.BASIC) || (type == TYPE.COMPUTER && connections > 0); 
+	}
+	
+	@Override
+	public void updateEntity() {
+		super.updateEntity();
+		
+		FutureTask<Object[]> task;
+		while ((task = callQueue.poll()) != null) {
+			task.run();
+		}
+	}
+	
 	public TileEntityPlayerManager setPlayer(EntityPlayer player) {
+		if (!checkMode()) return null;
+		
 		this.player = player;
 
 		// tell the computer
@@ -74,25 +97,10 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	public EntityPlayer getPlayer() {
 		return this.player;
 	}
-	
-	public InventoryPlayerManager getInventory() {
-		return inventory;
-	}
-	
-	public boolean hasFuel() {
-		// if we are connected to a computer
-		if (connections > 0) {
-			return true;
-		}
-		
-		if (inventory.getStackInSlot(0) != null && inventory.getStackInSlot(0).getItem() instanceof ItemCatalyst) {
-			return true;
-		}
-		
-		return false;
-	}
-	
+
 	public IInventory resolveInventory(String name) throws Exception {
+		if (!checkMode()) return null;
+
 		// the plate is only compatible with player and down directions
 		if (name.equals("player") || name.equals("down")) {
 			return Utils.getInventory(this, name);
@@ -100,23 +108,7 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 
 		return null;
 	}
-	
-	@Override
-	public void updateEntity() {
-		// if fuel slot is empty, pull from nearby stacks
-		if (inventory.getStackInSlot(0) == null) {
-			for (int i = 1; i <= 3; i++) {
-				if (inventory.getStackInSlot(i) != null) {
-					ItemStack fuel = inventory.decrStackSize(i, 1);
-					if (fuel != null) {
-						inventory.setInventorySlotContents(0, fuel);
-						break;
-					}
-				}
-			}
-		}
-	}
-	
+
 	@Override
 	public String getType() {
 		return "playerInvManager";
@@ -129,25 +121,17 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	
 	@Override
 	public Packet getDescriptionPacket() {
-		ByteArrayOutputStream data = new ByteArrayOutputStream(64);
-		DataOutputStream writer = new DataOutputStream(data);
-
-		try {
-			NBTTagCompound tile = new NBTTagCompound(PacketHandler.PACKET.TILEDESCRIPTION.name());
-			writeToNBT(tile);
-			NBTTagCompound.writeNamedTag(tile, writer);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+		NBTTagCompound data = new NBTTagCompound("data");
+		writeToNBT(data);
+		Packet132TileEntityData packet = new Packet132TileEntityData(xCoord, yCoord, zCoord, 0, data);
 		
-		Packet250CustomPayload packet = new Packet250CustomPayload();
-		packet.channel = InventoryManager.CHANNEL;
-		packet.data = data.toByteArray();
-		packet.length = data.size();
-		
-	    //InventoryManager.logger.info("Sending description packet");
 		return packet;
+	}
+	
+	@Override
+	public void onDataPacket(INetworkManager net, Packet132TileEntityData packet) {
+		super.onDataPacket(net, packet);
+		readFromNBT(packet.customParam1);
 	}
 	
 	public void setConnections(int data) {
@@ -160,23 +144,47 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 		return connections;
 	}
 	
+	public FutureTask<Object[]> queueCallable(Callable<Object[]> callable) {
+		FutureTask<Object[]> task = new FutureTask<Object[]>(callable);
+		callQueue.add(task);
+		return task;
+	}
+	
 	@Override
 	public Object[] callMethod(IComputerAccess computer, int method,
-			Object[] arguments) throws Exception {
+			final Object[] arguments) throws Exception {
+		// lazy constructor
+		if (cc == null) cc = new ComputerCraft(this);
 		// resolve calls
+		Callable<Object[]> callable;
 		switch (method) {
 		case 0: // size
-			return cc.size(arguments);
+			callable = new Callable<Object[]>() {
+				@Override public Object[] call() throws Exception { return cc.size(arguments); }
+			};
+			break;
 		case 1: // inventory <int:slot>
-			return cc.read(arguments);
+			callable = new Callable<Object[]>() {
+				@Override public Object[] call() throws Exception { return cc.read(arguments); }
+			};
+			break;
 		case 2: // equipped
 			if (!isPlayerOn()) throw new Exception("no player connected");
-			return new Integer[]{player.inventory.currentItem};
+			callable = new Callable<Object[]>() {
+				@Override public Object[] call() throws Exception { return new Integer[]{player.inventory.currentItem}; }
+			};
+			break;
 		case 3: // export
-			return cc.move(arguments);
+			callable = new Callable<Object[]>() {
+				@Override public Object[] call() throws Exception { return cc.move(arguments); }
+			};
+			break;
 		default:
 			throw new Exception("unknown method");
 		}
+
+		FutureTask<Object[]> task = queueCallable(callable);
+		return task.get();
 	}
 
 	@Override
@@ -195,60 +203,11 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 		this.computer = null;
 	}
 
-	/*@Override
-	public void entityEntering(ItemStack payload, ForgeDirection orientation) {
-		// find some room and try to put the item, otherwise send it back
-		if (!isPlayerOn()) {
-			// send back everything
-			InventoryManager.logger.info("Item entering (" + payload.itemID + "@" + payload.stackSize + ") from direction {" + orientation.offsetX + "," + orientation.offsetY + "," + orientation.offsetZ + "}");
-			TileEntity from = Utils.getTileNeighbor(worldObj, xCoord, yCoord, zCoord, orientation.getOpposite());
-			if (from != null && from instanceof IPipeEntry) {
-				((IPipeEntry)from).entityEntering(payload, orientation.getOpposite());
-			}
-		}
-	}
-
-	@Override
-	public void entityEntering(IPipedItem item, ForgeDirection orientation) {
-		// find some room and try to put the item, otherwise send it back
-		if (!isPlayerOn()) {
-			// send back everything
-			InventoryManager.logger.info("Item entering (" + item.getItemStack().itemID + "@" + item.getItemStack().stackSize + ") from direction {" + orientation.getOpposite().offsetX + "," + orientation.getOpposite().offsetY + "," + orientation.getOpposite().offsetZ + "}");
-			TileEntity from = Utils.getTileNeighbor(worldObj, xCoord, yCoord, zCoord, orientation.getOpposite());
-			InventoryManager.logger.info("Neighbor entity: " + from);
-			if (from != null && from instanceof IPipeEntry) {
-				InventoryManager.logger.info("Sending items back");
-				((IPipeEntry)from).entityEntering(item, orientation.getOpposite());
-			}
-		}
-	}
-
-	@Override
-	public boolean acceptItems() {
-		return false;
-	}*/
-	
-	public void damageCatalyst(int damage) {
-		// if connected to a computer, the catalyst is not used
-		if (connections > 0) return;
-		ItemStack fuelStack = inventory.getStackInSlot(0);
-		if (fuelStack != null) {
-			if (fuelStack.isItemStackDamageable()) {
-				fuelStack.setItemDamage(fuelStack.getItemDamage() + damage);
-				if (fuelStack.getItemDamage() > fuelStack.getItem().getMaxDamage()) {
-					fuelStack.stackSize--;
-					fuelStack.setItemDamage(0);
-				}
-				if (fuelStack.stackSize <= 0) {
-					inventory.setInventorySlotContents(0, null);
-				}
-			}
-		}
-	}
-
 	@Override
 	public int getSizeInventory() {
-		if (isPlayerOn() && hasFuel()) {
+		if (!checkMode()) return 0;
+
+		if (isPlayerOn()) {
 			return getPlayer().inventory.getSizeInventory() - 4; // don't give access to armor
 		}
 		return 0;
@@ -256,7 +215,9 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 
 	@Override
 	public ItemStack getStackInSlot(int var1) {
-		if (isPlayerOn() && hasFuel()) {
+		if (!checkMode()) return null;
+
+		if (isPlayerOn()) {
 			return getPlayer().inventory.getStackInSlot(var1);
 		}
 		return null;
@@ -264,8 +225,9 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 
 	@Override
 	public ItemStack decrStackSize(int slot, int amount) {
-		if (isPlayerOn() && hasFuel()) {
-			damageCatalyst(amount);
+		if (!checkMode()) return null;
+
+		if (isPlayerOn()) {
 			return getPlayer().inventory.decrStackSize(slot, amount);
 		}
 		return null;
@@ -273,7 +235,9 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 
 	@Override
 	public ItemStack getStackInSlotOnClosing(int var1) {
-		if (isPlayerOn() && hasFuel()) {
+		if (!checkMode()) return null;
+
+		if (isPlayerOn()) {
 			return player.inventory.getStackInSlotOnClosing(var1);
 		}
 		return null;
@@ -281,21 +245,18 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack stack) {
+		if (!checkMode()) return;
+
 		if (isPlayerOn()) {
-			if (stack == null) {
-				player.inventory.setInventorySlotContents(slot, stack);
-			} else {
-				if (hasFuel()) {
-					damageCatalyst(stack.stackSize);
-					player.inventory.setInventorySlotContents(slot, stack);
-				}
-			}
+			player.inventory.setInventorySlotContents(slot, stack);
 		}
 	}
 
 	@Override
 	public String getInvName() {
-		if (isPlayerOn() && hasFuel()) {
+		if (!checkMode()) return null;
+
+		if (isPlayerOn()) {
 			return player.inventory.getInvName();
 		}
 		return null;
@@ -303,7 +264,9 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 
 	@Override
 	public int getInventoryStackLimit() {
-		if (isPlayerOn() && hasFuel()) {
+		if (!checkMode()) return 0;
+
+		if (isPlayerOn()) {
 			return player.inventory.getInventoryStackLimit();
 		}
 		return 0;
@@ -316,29 +279,17 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 
 	@Override
 	public void openChest() {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void closeChest() {
-		// TODO Auto-generated method stub
 		
 	}
 	
 	@Override
 	public void writeToNBT(NBTTagCompound nbtData) {
-		NBTTagList nbtInventory = new NBTTagList("inventory");
-		for (int i = 0; i < inventory.getSizeInventory(); i++) {
-			ItemStack stack = inventory.getStackInSlot(i);
-			if (stack != null) {
-				NBTTagCompound nbtStack = new NBTTagCompound();
-				stack.writeToNBT(nbtStack);
-				nbtStack.setInteger("slot", i);
-				nbtInventory.appendTag(nbtStack);
-			}
-		}
-		nbtData.setTag("inventory", nbtInventory);
+		nbtData.setString("type", type.name());
 		nbtData.setInteger("connections", connections);
 		super.writeToNBT(nbtData);
 	}
@@ -346,18 +297,8 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 	@Override
 	public void readFromNBT(NBTTagCompound nbtData) {
 		super.readFromNBT(nbtData);
-		if (nbtData.hasKey("inventory")) {
-			NBTTagList list = (NBTTagList)nbtData.getTag("inventory");
-			for (int i = 0; i < inventory.getSizeInventory() && i < list.tagCount(); i++) {
-				if (list.tagAt(i) instanceof NBTTagCompound) {
-					NBTTagCompound nbtStack = (NBTTagCompound)list.tagAt(i);
-					int slot = nbtStack.getInteger("slot");
-					ItemStack stack = ItemStack.loadItemStackFromNBT(nbtStack);
-					if (stack != null) {
-						inventory.setInventorySlotContents(slot, stack);
-					}
-				}
-			}
+		if (nbtData.hasKey("type")) {
+			type = TYPE.valueOf(nbtData.getString("type"));
 		}
 		if (nbtData.hasKey("connections")) {
 			connections = nbtData.getInteger("connections");

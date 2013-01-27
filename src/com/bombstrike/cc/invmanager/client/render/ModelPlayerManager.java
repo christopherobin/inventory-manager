@@ -1,6 +1,8 @@
 package com.bombstrike.cc.invmanager.client.render;
 
 
+import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
+
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 
@@ -10,13 +12,16 @@ public class ModelPlayerManager extends ModelBase {
 	ModelRenderer connections[];
 
 	public ModelPlayerManager() {
-		textureWidth = 56;
-		textureHeight = 50;
+		textureWidth = 128;
+		textureHeight = 128;
 
 		plates = new ModelRenderer[] {
 			new ModelRenderer(this, 0, 0),
 			new ModelRenderer(this, 0, 16),
-			new ModelRenderer(this, 0, 32)
+			new ModelRenderer(this, 0, 32),
+			new ModelRenderer(this, 56, 0),
+			new ModelRenderer(this, 56, 16),
+			new ModelRenderer(this, 56, 32)
 		};
 		for (ModelRenderer plate : plates) {
 			plate.addBox(1F, 0F, 1F, 14, 2, 14);
@@ -26,10 +31,10 @@ public class ModelPlayerManager extends ModelBase {
 		
 		// the four connections 0 is left, 1 is up, 2 is right, 3 is down
 		connections = new ModelRenderer[]{
-				new ModelRenderer(this, 0, 48),
-				new ModelRenderer(this, 0, 48),
-				new ModelRenderer(this, 0, 48),
-				new ModelRenderer(this, 0, 48)
+				new ModelRenderer(this, 56, 0),
+				new ModelRenderer(this, 56, 0),
+				new ModelRenderer(this, 56, 0),
+				new ModelRenderer(this, 56, 0)
 		};
 
 		// left
@@ -55,17 +60,20 @@ public class ModelPlayerManager extends ModelBase {
 		}
 	}
 
-	public void render(float scale, TileEntityPlayerManagerRenderer.STATUS status, int connectionsField) {
+	public void render(float scale, TileEntityPlayerManager.TYPE type, TileEntityPlayerManagerRenderer.STATUS status, int connectionsField) {
+		int idx = 0;
+		if (type == type.BASIC) idx = 3;
+		
 		switch (status) {
 		default:
 		case OFFLINE:
-			plates[0].render(scale);
+			plates[idx].render(scale);
 			break;
 		case ONLINE:
-			plates[1].render(scale);
+			plates[idx+1].render(scale);
 			break;
 		case ACTIVE:
-			plates[2].render(scale);
+			plates[idx+2].render(scale);
 		}
 
 		// the connectionsField int is a bitfield were bit 1 is left, bit 2 top, etc...

@@ -9,12 +9,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.Property;
 
-import com.bombstrike.cc.invmanager.block.BlockPlayerManager;
+import com.bombstrike.cc.invmanager.block.BlockBasicPlayerManager;
+import com.bombstrike.cc.invmanager.block.BlockComputerPlayerManager;
 import com.bombstrike.cc.invmanager.client.PacketHandler;
-import com.bombstrike.cc.invmanager.client.gui.GuiHandler;
-import com.bombstrike.cc.invmanager.item.ItemCatalyst;
 import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.Init;
 import cpw.mods.fml.common.Mod.Instance;
@@ -44,8 +44,8 @@ public class InventoryManager
 	public static InventoryManager instance;
 	public static Logger logger;
 	//public static int blockPlayerManagerId;
-	public static BlockPlayerManager blockPlayerManager;
-	public static ItemCatalyst itemCatalyst;
+	public static BlockBasicPlayerManager blockBasicPlayerManager;
+	public static BlockComputerPlayerManager blockComputerPlayerManager;
 	public static int renderId;
 	
 	@PreInit
@@ -58,13 +58,16 @@ public class InventoryManager
 		try {
 			cfg.load();
 			// retrieve our block info
-			Property blockPlayerManagerProperty = cfg.getBlock("playerManager", 1250);
-			blockPlayerManagerProperty.comment = "The block ID for the player manager peripheral";
-			blockPlayerManager = new BlockPlayerManager(blockPlayerManagerProperty.getInt(1250));
+			Property blockBasicPlayerManagerProperty = cfg.getBlock("basicPlayerManager", 1250);
+			blockBasicPlayerManagerProperty.comment = "The block ID for the player manager plate";
+			blockBasicPlayerManager = new BlockBasicPlayerManager(blockBasicPlayerManagerProperty.getInt(1250));
 			
-			Property itemCatalystProperty = cfg.getItem("itemCatalyst", 5500);
-			itemCatalystProperty.comment = "The catalyst item for the plate";
-			itemCatalyst = new ItemCatalyst(itemCatalystProperty.getInt(5500));
+			if (Loader.isModLoaded("ComputerCraft")) {
+				Property blockComputerPlayerManagerProperty = cfg.getBlock("computerPlayerManager", 1251);
+				blockComputerPlayerManagerProperty.comment = "The block ID for the computer player manager peripheral";
+				blockComputerPlayerManager = new BlockComputerPlayerManager(blockComputerPlayerManagerProperty.getInt(1251));
+			}
+			
 			
 		} catch (Exception e) {
 			logger.severe(MODNAME + " encountered an exception while trying to access it's configuration file:\n" + e);
@@ -76,16 +79,17 @@ public class InventoryManager
 	@Init
 	public void init(FMLInitializationEvent init)
 	{
-		// create blocks
-		//blockPlayerManager = new BlockPlayerManager(blockPlayerManagerId);
 		// have fun with the registry
-		GameRegistry.registerBlock(blockPlayerManager, ItemBlock.class, blockPlayerManager.getBlockName());
-		GameRegistry.registerTileEntity(TileEntityPlayerManager.class, blockPlayerManager.getBlockName());
-		LanguageRegistry.addName(blockPlayerManager, "Player Manager Peripheral");
+		GameRegistry.registerBlock(blockBasicPlayerManager, ItemBlock.class, blockBasicPlayerManager.getBlockName());
+		GameRegistry.registerTileEntity(TileEntityPlayerManager.class, blockBasicPlayerManager.getBlockName());
+		LanguageRegistry.addName(blockBasicPlayerManager, "Player Manager Plate");
 		
-		GameRegistry.registerItem(itemCatalyst, itemCatalyst.getItemName());
-		LanguageRegistry.addName(itemCatalyst, "Inventory Catalyst");
-
+		if (Loader.isModLoaded("ComputerCraft")) {
+			GameRegistry.registerBlock(blockComputerPlayerManager, ItemBlock.class, blockComputerPlayerManager.getBlockName());
+			GameRegistry.registerTileEntity(TileEntityPlayerManager.class, blockComputerPlayerManager.getBlockName());
+			LanguageRegistry.addName(blockComputerPlayerManager, "Player Manager Peripheral");
+		}
+		
 		proxy.registerRenderInformation();
 		proxy.registerTileEntityRenderers();
 		NetworkRegistry.instance().registerGuiHandler(this, proxy);
@@ -95,9 +99,10 @@ public class InventoryManager
 	@PostInit
 	public void postInit(FMLPostInitializationEvent postInit)
 	{
-		NetworkRegistry.instance().registerGuiHandler(this, new GuiHandler());
-		GameRegistry.addRecipe(new ItemStack(blockPlayerManager, 1), "ttt", "rer", "ppp", 't', Block.thinGlass, 'r', Item.redstone, 'e', Item.enderPearl, 'p', Block.stoneSingleSlab);
-		GameRegistry.addRecipe(new ItemStack(itemCatalyst, 1), "lrl", "rpr", "lrl", 'l', Block.oreLapis, 'r', Item.redstone, 'g', Item.enderPearl);
+		GameRegistry.addRecipe(new ItemStack(blockBasicPlayerManager, 1), "ttt", "geg", "ggg", 't', Block.thinGlass, 'e', Item.enderPearl, 'g', Item.ingotGold);
+		if (Loader.isModLoaded("ComputerCraft")) {
+			GameRegistry.addRecipe(new ItemStack(blockComputerPlayerManager, 1), "ttt", "rer", "ppp", 't', Block.thinGlass, 'r', Item.redstone, 'e', Item.enderPearl, 'p', Block.stoneSingleSlab);
+		}
 	}
 }
 

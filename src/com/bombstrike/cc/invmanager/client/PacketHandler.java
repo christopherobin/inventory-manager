@@ -24,29 +24,7 @@ public class PacketHandler implements IPacketHandler {
 
 	@Override
 	public void onPacketData(INetworkManager manager, Packet250CustomPayload packet, Player player) {
-		DataInputStream input = new DataInputStream(new ByteArrayInputStream(packet.data));
-		try {
-			NBTTagCompound nbtData = (NBTTagCompound)NBTTagCompound.readNamedTag(input);
-			if (nbtData.getName().equals(PACKET.TILEDESCRIPTION.name())) {
-				String name = nbtData.getString("id");
-				if (name.equals(InventoryManager.blockPlayerManager.getBlockName())) {
-					int x = nbtData.getInteger("x");
-					int y = nbtData.getInteger("y");
-					int z = nbtData.getInteger("z");
-					// retrieve tile entity
-					World world = ((EntityPlayer)player).worldObj;
-					TileEntity te = world.getBlockTileEntity(x, y, z);
-					if (te instanceof TileEntityPlayerManager) {
-						// feed the entity whatever data is there
-						((TileEntityPlayerManager)te).readFromNBT(nbtData);
-					}
-				}
-			}
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
-		}
+		// nothing
 	}
 
 }
