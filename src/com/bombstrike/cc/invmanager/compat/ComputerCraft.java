@@ -7,9 +7,6 @@ import java.util.concurrent.Callable;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.common.ForgeDirection;
-import buildcraft.api.transport.IPipeEntry;
 
 import com.bombstrike.cc.invmanager.Utils;
 import com.bombstrike.cc.invmanager.Utils.Manager;
@@ -18,26 +15,6 @@ import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 // those are the methods called from computer craft
 public class ComputerCraft {
 	private TileEntityPlayerManager tileEntity;
-	
-	public class CCCallable implements Callable<Object[]> {
-		private Object[] arguments;
-		private Method method;
-		private ComputerCraft instance;
-		
-		public CCCallable(ComputerCraft instance, Method method, Object[] arguments) {
-			this.instance = instance;
-			this.method = method;
-			this.arguments = arguments;
-		}
-		
-		@Override
-		public Object[] call() throws Exception {
-			return (Object[])method.invoke(instance, arguments);
-		}
-		
-	}
-	
-	protected HashMap<String, Callable> callables;
 	
 	public ComputerCraft(TileEntityPlayerManager entity) {
 		tileEntity = entity;
