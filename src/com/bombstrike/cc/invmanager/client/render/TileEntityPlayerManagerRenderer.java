@@ -44,7 +44,7 @@ public class TileEntityPlayerManagerRenderer extends TileEntitySpecialRenderer {
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		
-		ForgeHooksClient.bindTexture("/com/bombstrike/cc/invmanager/gfx/blocks.png", 0);
+		ForgeHooksClient.bindTexture(InventoryManager.GFXDIR.concat("texture.png"), 0);
 		
 		model.render(1.0F/16.0F, type, status, connections);
 

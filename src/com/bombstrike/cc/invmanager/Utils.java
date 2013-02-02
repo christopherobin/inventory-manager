@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.bombstrike.cc.invmanager.tileentity.BaseManager;
 import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
 import net.minecraft.block.Block;
@@ -44,10 +45,10 @@ public class Utils {
 		return neighbor;
 	}
 	
-	static public IInventory getInventory(TileEntityPlayerManager entity, String name) throws Exception {
-		if (name.contentEquals("player")) {
-			if (entity.isPlayerOn()) {
-				return entity.getPlayer().inventory;
+	static public IInventory getInventory(BaseManager entity, String name) throws Exception {
+		if (name.contentEquals("player") && entity instanceof TileEntityPlayerManager) {
+			if (((TileEntityPlayerManager)entity).isPlayerOn()) {
+				return ((TileEntityPlayerManager)entity).getPlayer().inventory;
 			}
 			throw new Exception("no player connected");
 		}

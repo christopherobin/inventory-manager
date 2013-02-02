@@ -36,6 +36,7 @@ public class InventoryManager
 	// constants
 	public static final String MODNAME = "InventoryManager Peripherals";
 	public static final String CHANNEL = "ccinvmanager";
+	public static final String GFXDIR = "/com/bombstrike/cc/invmanager/gfx/";
 	
 	// static stuff
 	@SidedProxy(clientSide="com.bombstrike.cc.invmanager.client.ClientProxy", serverSide="com.bombstrike.cc.invmanager.CommonProxy")

@@ -23,21 +23,13 @@ import com.bombstrike.cc.invmanager.compat.ComputerCraft;
 import dan200.computer.api.IComputerAccess;
 import dan200.computer.api.IPeripheral;
 
-public class TileEntityPlayerManager extends TileEntity implements IPeripheral, IInventory {
+public class TileEntityPlayerManager extends BaseManager implements IPeripheral, IInventory {
 	public enum TYPE {
 		BASIC,
 		COMPUTER
 	};
-	// available methods
-	protected String[] methodList = {
-			"size",
-			"read",
-			"equipped",
-			"move"
-	};
+
 	protected EntityPlayer player = null;
-	protected IComputerAccess computer = null;
-	protected ComputerCraft cc = null;
 	protected int connections = 0;
 	protected TYPE type;
 	protected ConcurrentLinkedQueue<FutureTask<Object[]>> callQueue;
@@ -114,11 +106,6 @@ public class TileEntityPlayerManager extends TileEntity implements IPeripheral, 
 		return "playerInvManager";
 	}
 
-	@Override
-	public String[] getMethodNames() {
-		return methodList;
-	}
-	
 	@Override
 	public Packet getDescriptionPacket() {
 		NBTTagCompound data = new NBTTagCompound("data");
