@@ -69,11 +69,6 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 		if (!checkMode()) return null;
 		
 		this.player = player;
-
-		// tell the computer
-		if (computer != null) {
-			computer.queueEvent("playerAvailable");
-		}
 		
 		// actually tell everyone
 		for (ForgeDirection direction: ForgeDirection.VALID_DIRECTIONS) {
@@ -82,6 +77,9 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 				Block.blocksList[blockId].onNeighborBlockChange(worldObj, xCoord + direction.offsetX, yCoord + direction.offsetY, zCoord + direction.offsetZ, blockId);
 			}
 		}
+		
+		// tell every computers that someone step on
+		queueEvent("player", new Boolean[]{player != null});
 
 		return this;
 	}
@@ -106,21 +104,6 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 		return "playerInvManager";
 	}
 
-	@Override
-	public Packet getDescriptionPacket() {
-		NBTTagCompound data = new NBTTagCompound("data");
-		writeToNBT(data);
-		Packet132TileEntityData packet = new Packet132TileEntityData(xCoord, yCoord, zCoord, 0, data);
-		
-		return packet;
-	}
-	
-	@Override
-	public void onDataPacket(INetworkManager net, Packet132TileEntityData packet) {
-		super.onDataPacket(net, packet);
-		readFromNBT(packet.customParam1);
-	}
-	
 	public void setConnections(int data) {
 		connections = data;
 		// if on the server, update the client
@@ -178,16 +161,6 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 	public boolean canAttachToSide(int side) {
 		if (side == 1) return false; // doesn't make sense to attach when under
 		return true;
-	}
-
-	@Override
-	public void attach(IComputerAccess computer) {
-		this.computer = computer;
-	}
-
-	@Override
-	public void detach(IComputerAccess computer) {
-		this.computer = null;
 	}
 
 	@Override
