@@ -20,8 +20,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 import dan200.computer.api.ComputerCraftAPI;
 
-public class BlockBasicPlayerManager extends BlockContainer {
-	public BlockBasicPlayerManager(int blockId) {
+public class BlockPlayerManager extends BlockContainer {
+	public BlockPlayerManager(int blockId) {
 		super(blockId, Material.iron);
 		setBlockName("basicPlayerManager");
 		setHardness(3.0F);

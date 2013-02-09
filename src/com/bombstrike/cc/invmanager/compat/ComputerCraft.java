@@ -10,17 +10,42 @@ import net.minecraft.item.ItemStack;
 
 import com.bombstrike.cc.invmanager.Utils;
 import com.bombstrike.cc.invmanager.Utils.Manager;
+import com.bombstrike.cc.invmanager.tileentity.BaseManager;
 import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
+
+import dan200.computer.api.IComputerAccess;
 
 // those are the methods called from computer craft
 public class ComputerCraft {
-	private TileEntityPlayerManager tileEntity;
+	private BaseManager tileEntity;
 	
-	public ComputerCraft(TileEntityPlayerManager entity) {
-		tileEntity = entity;
+	/**
+	 * This class bind a task to a computer, and is used to queue calls and move them
+	 * between threads
+	 */
+	public class Task {
+		protected IComputerAccess computer;
+		protected Callable<Object> callable;
+		
+		public Task(IComputerAccess computer, Callable<Object> callable) {
+			this.computer = computer;
+			this.callable = callable;
+		}
+		
+		public Object call() throws Exception {
+			return callable.call();
+		}
+		
+		public IComputerAccess getComputer() {
+			return computer;
+		}
 	}
 	
-	public Object[] move(Object[] arguments) throws Exception {
+	public ComputerCraft(BaseManager baseManager) {
+		tileEntity = baseManager;
+	}
+	
+	public Object move(Object[] arguments) throws Exception {
 		// variables
 		IInventory source;
 		IInventory target;
@@ -79,13 +104,13 @@ public class ComputerCraft {
 			itemInfo.put("display", sourceStack.getDisplayName());
 			itemInfo.put("damage", sourceStack.getItemDamage());
 			
-			return new Object[]{itemInfo};
+			return itemInfo;
 		}
 		
-		return new Integer[]{};
+		return null;
 	}
 
-	public Object[] read(Object[] arguments) throws Exception {
+	public Object read(Object[] arguments) throws Exception {
 		// variables
 		IInventory source;
 		int sourceSlot;
@@ -115,12 +140,12 @@ public class ComputerCraft {
 			itemInfo.put("display", stack.getDisplayName());
 			itemInfo.put("damage", stack.getItemDamage());
 
-			return new Object[]{itemInfo};
+			return itemInfo;
 		}
-		return new Integer[]{0, 0};
+		return 0;
 	}
 
-	public Object[] size(Object[] arguments) throws Exception {
+	public Object size(Object[] arguments) throws Exception {
 		// variables
 		IInventory source;
 		
@@ -134,6 +159,6 @@ public class ComputerCraft {
 		source = tileEntity.resolveInventory((String)arguments[0]);
 		if (source == null) throw new Exception("the inventory \"" + (String)arguments[0] + "\" doesn't exists");
 		
-		return new Integer[]{source.getSizeInventory()};
+		return source.getSizeInventory();
 	}
 }

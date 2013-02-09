@@ -32,14 +32,13 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 	protected EntityPlayer player = null;
 	protected int connections = 0;
 	protected TYPE type;
-	protected ConcurrentLinkedQueue<FutureTask<Object[]>> callQueue;
 	
 	public TileEntityPlayerManager() {
 		this(TYPE.BASIC);
 	}
 	
 	public TileEntityPlayerManager(TYPE type) {
-		callQueue = new ConcurrentLinkedQueue<FutureTask<Object[]>>();
+		super();
 		this.type = type;
 	}
 	
@@ -53,16 +52,6 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 	
 	public boolean checkMode() {
 		return (type == TYPE.BASIC) || (type == TYPE.COMPUTER && connections > 0); 
-	}
-	
-	@Override
-	public void updateEntity() {
-		super.updateEntity();
-		
-		FutureTask<Object[]> task;
-		while ((task = callQueue.poll()) != null) {
-			task.run();
-		}
 	}
 	
 	public TileEntityPlayerManager setPlayer(EntityPlayer player) {
@@ -99,11 +88,6 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 		return null;
 	}
 
-	@Override
-	public String getType() {
-		return "playerInvManager";
-	}
-
 	public void setConnections(int data) {
 		connections = data;
 		// if on the server, update the client
@@ -113,49 +97,6 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 	public int getConnections() {
 		return connections;
 	}
-	
-	public FutureTask<Object[]> queueCallable(Callable<Object[]> callable) {
-		FutureTask<Object[]> task = new FutureTask<Object[]>(callable);
-		callQueue.add(task);
-		return task;
-	}
-	
-	@Override
-	public Object[] callMethod(IComputerAccess computer, int method,
-			final Object[] arguments) throws Exception {
-		// lazy constructor
-		if (cc == null) cc = new ComputerCraft(this);
-		// resolve calls
-		Callable<Object[]> callable;
-		switch (method) {
-		case 0: // size
-			callable = new Callable<Object[]>() {
-				@Override public Object[] call() throws Exception { return cc.size(arguments); }
-			};
-			break;
-		case 1: // inventory <int:slot>
-			callable = new Callable<Object[]>() {
-				@Override public Object[] call() throws Exception { return cc.read(arguments); }
-			};
-			break;
-		case 2: // equipped
-			if (!isPlayerOn()) throw new Exception("no player connected");
-			callable = new Callable<Object[]>() {
-				@Override public Object[] call() throws Exception { return new Integer[]{player.inventory.currentItem}; }
-			};
-			break;
-		case 3: // export
-			callable = new Callable<Object[]>() {
-				@Override public Object[] call() throws Exception { return cc.move(arguments); }
-			};
-			break;
-		default:
-			throw new Exception("unknown method");
-		}
-
-		FutureTask<Object[]> task = queueCallable(callable);
-		return task.get();
-	}
 
 	@Override
 	public boolean canAttachToSide(int side) {
@@ -163,6 +104,10 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 		return true;
 	}
 
+	/**
+	 * Inventory implementation
+	 */
+	
 	@Override
 	public int getSizeInventory() {
 		if (!checkMode()) return 0;
@@ -230,11 +175,6 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 			return player.inventory.getInventoryStackLimit();
 		}
 		return 0;
-	}
-
-	@Override
-	public boolean isUseableByPlayer(EntityPlayer player) {
-		return this.worldObj.getBlockTileEntity(this.xCoord, this.yCoord, this.zCoord) != this ? false : player.getDistanceSq((double)this.xCoord + 0.5D, (double)this.yCoord + 0.5D, (double)this.zCoord + 0.5D) <= 64.0D;
 	}
 
 	@Override

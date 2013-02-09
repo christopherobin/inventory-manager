@@ -20,10 +20,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 import dan200.computer.api.ComputerCraftAPI;
 
-public class BlockComputerPlayerManager extends BlockBasicPlayerManager {
+public class BlockPlayerManagerComputer extends BlockPlayerManager {
 	Class<?> computerEntityInterface = null;
 	
-	public BlockComputerPlayerManager(int blockId) {
+	public BlockPlayerManagerComputer(int blockId) {
 		super(blockId);
 		setBlockName("playerManagerPeripheral");
 		

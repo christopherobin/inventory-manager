@@ -1,8 +1,12 @@
 package com.bombstrike.cc.invmanager.tileentity;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.nbt.NBTTagCompound;
@@ -13,11 +17,16 @@ import net.minecraft.tileentity.TileEntity;
 
 import com.bombstrike.cc.invmanager.Utils;
 import com.bombstrike.cc.invmanager.compat.ComputerCraft;
+import com.bombstrike.cc.invmanager.compat.ComputerCraft.Task;
 
 import dan200.computer.api.IComputerAccess;
 import dan200.computer.api.IPeripheral;
 
 public class BaseManager extends TileEntity implements IPeripheral {
+	/**
+	 * This is the queue of calls waiting to be run in the main thread
+	 */
+	protected ConcurrentLinkedQueue<Task> callQueue;
 	/**
 	 * This map contains the list of computers currently connected to this device
 	 */
@@ -31,16 +40,16 @@ public class BaseManager extends TileEntity implements IPeripheral {
 	 * This is the list of methods that are provided to ComputerCraft
 	 */
 	final static protected String[] methodList = {
-			"_size",
-			"_read",
-			"_equipped",
-			"_move"
+			"size",
+			"read",
+			"move"
 	};
 
 	public BaseManager() {
 		// attach and detach are called from the LUA thread, so we need a thread
 		// safe class
 		computers = new ConcurrentHashMap<Integer, IComputerAccess>();
+		callQueue = new ConcurrentLinkedQueue<Task>();
 	}
 	
 	/**
@@ -51,13 +60,42 @@ public class BaseManager extends TileEntity implements IPeripheral {
 	 */
 	public IInventory resolveInventory(String name) throws Exception {
 		// the plate is only compatible with player and down directions
-		if (name.equals("player") || name.equals("down")) {
+		if (!name.equals("player")) {
 			return Utils.getInventory(this, name);
 		}
 
 		return null;
 	}
 
+	/**
+	 * Called every few ticks, run every computer task waiting to be run
+	 */
+	@Override
+	public void updateEntity() {
+		super.updateEntity();
+		
+		Task task;
+		while ((task = callQueue.poll()) != null) {
+			Map<String, Object> result = new HashMap<String, Object>();
+			try {
+				result.put("result", "success");
+				result.put("data", task.call());
+			} catch (Exception e) {
+				result.put("result", "failure");
+				result.put("message", e.getMessage());
+			}
+			queueEvent("invmanager_task", new Object[]{result}, task.getComputer());
+		}
+	}
+
+	/**
+	 * Queue a piece of code to be called at the next entity update
+	 * @param callable
+	 */
+	public void queueCallable(IComputerAccess computer, Callable<Object> callable) {
+		callQueue.add(cc.new Task(computer, callable));
+	}
+	
 	/**
 	 * Queue an event with no arguments on all connected computers
 	 * @param event The event name
@@ -113,8 +151,7 @@ public class BaseManager extends TileEntity implements IPeripheral {
 
 	@Override
 	public String getType() {
-		// TODO Auto-generated method stub
-		return null;
+		return "InventoryManager";
 	}
 
 	@Override
@@ -124,7 +161,38 @@ public class BaseManager extends TileEntity implements IPeripheral {
 
 	@Override
 	public Object[] callMethod(IComputerAccess computer, int method,
-			Object[] arguments) throws Exception {
+			final Object[] arguments) throws Exception {
+		// lazy constructor
+		if (cc == null) cc = new ComputerCraft(this);
+		// resolve calls
+		Callable<Object> callable;
+		switch (method) {
+		case 0: // size
+			callable = new Callable<Object>() {
+				@Override public Object call() throws Exception { return cc.size(arguments); }
+			};
+			break;
+		case 1: // inventory <int:slot>
+			callable = new Callable<Object>() {
+				@Override public Object call() throws Exception { return cc.read(arguments); }
+			};
+			break;
+		/*case 2: // equipped
+			if (!isPlayerOn()) throw new Exception("no player connected");
+			callable = new Callable<Object[]>() {
+				@Override public Object[] call() throws Exception { return new Integer[]{player.inventory.currentItem}; }
+			};
+			break;*/
+		case 2: // move
+			callable = new Callable<Object>() {
+				@Override public Object call() throws Exception { return cc.move(arguments); }
+			};
+			break;
+		default:
+			throw new Exception("unknown method");
+		}
+
+		queueCallable(computer, callable);
 		return null;
 	}
 
@@ -137,6 +205,7 @@ public class BaseManager extends TileEntity implements IPeripheral {
 	@Override
 	public void attach(IComputerAccess computer) {
 		computers.put(computer.getID(), computer);
+		computer.mountFixedDir("invmanager", "mods/invmanager-lua", true, 0);
 	}
 
 	@Override

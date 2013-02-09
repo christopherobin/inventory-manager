@@ -9,8 +9,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.Property;
 
-import com.bombstrike.cc.invmanager.block.BlockBasicPlayerManager;
-import com.bombstrike.cc.invmanager.block.BlockComputerPlayerManager;
+import com.bombstrike.cc.invmanager.block.BlockPlayerManager;
+import com.bombstrike.cc.invmanager.block.BlockPlayerManagerComputer;
 import com.bombstrike.cc.invmanager.client.PacketHandler;
 import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
@@ -45,10 +45,14 @@ public class InventoryManager
 	public static InventoryManager instance;
 	public static Logger logger;
 	//public static int blockPlayerManagerId;
-	public static BlockBasicPlayerManager blockBasicPlayerManager;
-	public static BlockComputerPlayerManager blockComputerPlayerManager;
+	public static BlockPlayerManager blockBasicPlayerManager;
+	public static BlockPlayerManagerComputer blockComputerPlayerManager;
 	public static int renderId;
 	
+	/**
+	 * Setup configuration and instanciate blocks
+	 * @param preinit
+	 */
 	@PreInit
 	public void preInit(FMLPreInitializationEvent preinit)
 	{
@@ -61,12 +65,12 @@ public class InventoryManager
 			// retrieve our block info
 			Property blockBasicPlayerManagerProperty = cfg.getBlock("basicPlayerManager", 1250);
 			blockBasicPlayerManagerProperty.comment = "The block ID for the player manager plate";
-			blockBasicPlayerManager = new BlockBasicPlayerManager(blockBasicPlayerManagerProperty.getInt(1250));
+			blockBasicPlayerManager = new BlockPlayerManager(blockBasicPlayerManagerProperty.getInt(1250));
 			
 			if (Loader.isModLoaded("ComputerCraft")) {
 				Property blockComputerPlayerManagerProperty = cfg.getBlock("computerPlayerManager", 1251);
 				blockComputerPlayerManagerProperty.comment = "The block ID for the computer player manager peripheral";
-				blockComputerPlayerManager = new BlockComputerPlayerManager(blockComputerPlayerManagerProperty.getInt(1251));
+				blockComputerPlayerManager = new BlockPlayerManagerComputer(blockComputerPlayerManagerProperty.getInt(1251));
 			}
 			
 			
@@ -77,6 +81,10 @@ public class InventoryManager
 		}
 	}
 	
+	/**
+	 * Register the blocks and items, setup proxies
+	 * @param init
+	 */
 	@Init
 	public void init(FMLInitializationEvent init)
 	{
@@ -93,6 +101,7 @@ public class InventoryManager
 		
 		proxy.registerRenderInformation();
 		proxy.registerTileEntityRenderers();
+		proxy.prepareApis();
 		NetworkRegistry.instance().registerGuiHandler(this, proxy);
 		// add recipe
 	}
