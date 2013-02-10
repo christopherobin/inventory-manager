@@ -1,26 +1,14 @@
 package com.bombstrike.cc.invmanager.tileentity;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.INetworkManager;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.Packet132TileEntityData;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.ForgeDirection;
 
-import com.bombstrike.cc.invmanager.InventoryManager;
 import com.bombstrike.cc.invmanager.Utils;
-import com.bombstrike.cc.invmanager.compat.ComputerCraft;
 
-import dan200.computer.api.IComputerAccess;
 import dan200.computer.api.IPeripheral;
 
 public class TileEntityPlayerManager extends BaseManager implements IPeripheral, IInventory {
@@ -30,7 +18,6 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 	};
 
 	protected EntityPlayer player = null;
-	protected int connections = 0;
 	protected TYPE type;
 	
 	public TileEntityPlayerManager() {
@@ -51,7 +38,7 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 	}
 	
 	public boolean checkMode() {
-		return (type == TYPE.BASIC) || (type == TYPE.COMPUTER && connections > 0); 
+		return (type == TYPE.BASIC) || (type == TYPE.COMPUTER && getComputerConnections() > 0); 
 	}
 	
 	public TileEntityPlayerManager setPlayer(EntityPlayer player) {
@@ -86,16 +73,6 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 		}
 
 		return null;
-	}
-
-	public void setConnections(int data) {
-		connections = data;
-		// if on the server, update the client
-		if (!worldObj.isRemote) worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
-	}
-	
-	public int getConnections() {
-		return connections;
 	}
 
 	@Override
@@ -190,7 +167,6 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 	@Override
 	public void writeToNBT(NBTTagCompound nbtData) {
 		nbtData.setString("type", type.name());
-		nbtData.setInteger("connections", connections);
 		super.writeToNBT(nbtData);
 	}
 	
@@ -200,8 +176,10 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 		if (nbtData.hasKey("type")) {
 			type = TYPE.valueOf(nbtData.getString("type"));
 		}
-		if (nbtData.hasKey("connections")) {
-			connections = nbtData.getInteger("connections");
-		}
+	}
+
+	@Override
+	public boolean isUseableByPlayer(EntityPlayer var1) {
+		return false;
 	}
 }

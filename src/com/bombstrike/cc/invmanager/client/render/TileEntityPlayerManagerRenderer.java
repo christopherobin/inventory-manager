@@ -34,7 +34,7 @@ public class TileEntityPlayerManagerRenderer extends TileEntitySpecialRenderer {
 					status = STATUS.ACTIVE;
 				}
 			}
-			render(x, y, z, playerManagerEntity.getPlateType(), status, playerManagerEntity.getConnections());
+			render(x, y, z, playerManagerEntity.getPlateType(), status, playerManagerEntity.getComputerConnections());
 		} else {
 			render(x, y, z, TYPE.BASIC, STATUS.ONLINE, 0x0);
 		}

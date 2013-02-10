@@ -45,6 +45,13 @@ public class Utils {
 		return neighbor;
 	}
 	
+	/**
+	 * Retrieve the inventory specified by the given keyword relative to the tile entity
+	 * @param entity
+	 * @param name
+	 * @return
+	 * @throws Exception
+	 */
 	static public IInventory getInventory(BaseManager entity, String name) throws Exception {
 		if (name.contentEquals("player") && entity instanceof TileEntityPlayerManager) {
 			if (((TileEntityPlayerManager)entity).isPlayerOn()) {
@@ -54,10 +61,12 @@ public class Utils {
 		}
 
 		if (directionMap.containsKey(name)) {
+			// get tile entity
 			TileEntity te = Utils.getTileNeighbor(entity.worldObj, entity.xCoord, entity.yCoord, entity.zCoord, directionMap.get(name));
+			// check if it is an instance of IInventory
 			if (te != null && te instanceof IInventory) {
 				int blockID = getBlockNeighbor(entity.worldObj, entity.xCoord, entity.yCoord, entity.zCoord, directionMap.get(name)); 
-				// check for double chest
+				// check for double chest by looking in every direction for another chest entity
 				if (te instanceof TileEntityChest) {
 					ForgeDirection directions[] = {ForgeDirection.SOUTH, ForgeDirection.NORTH, ForgeDirection.EAST, ForgeDirection.WEST};
 					for (ForgeDirection direction : directions) {
@@ -83,6 +92,12 @@ public class Utils {
 			this.inventory = inventory;
 		}
 		
+		/**
+		 * Check if a stack belong in a slot, prevents adding the wrong armor pieces to the wrong slots
+		 * @param stack
+		 * @param slot
+		 * @return boolean
+		 */
 		private boolean stackBelongInSlot(ItemStack stack, int slot) {
 			// we need to prevent peoples from doing weird things to the player
 			if (inventory instanceof InventoryPlayer) {
@@ -98,10 +113,23 @@ public class Utils {
 			return true;
 		}
 		
+		/**
+		 * Shortcut for add(stack, -1, stackSize)
+		 * @param stack
+		 * @return
+		 */
 		public int add(ItemStack stack) {
 			return add(stack, -1, stack.stackSize);
 		}
 		
+		/**
+		 * Add the ItemStack stack to the inventory at position slot up to the quantity
+		 * specified, if the slot is unavailable, it will try any of the other slots
+		 * @param stack
+		 * @param slot
+		 * @param quantity
+		 * @return The amount of items added to the inventory
+		 */
 		public int add(ItemStack stack, int slot, int quantity) {
 			int invSize = inventory.getSizeInventory();
 			ItemStack destStack;

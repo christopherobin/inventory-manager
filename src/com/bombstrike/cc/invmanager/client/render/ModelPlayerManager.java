@@ -5,6 +5,7 @@ import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraftforge.common.ForgeDirection;
 
 public class ModelPlayerManager extends ModelBase {
 	// fields
@@ -37,23 +38,25 @@ public class ModelPlayerManager extends ModelBase {
 				new ModelRenderer(this, 56, 0)
 		};
 
-		// left
-		connections[0].addBox(5F, 0F, -1F, 6, 1, 1);
+		// NORTH
+		connections[0].addBox(5F, 0F, 0F, 6, 1, 1);
 		connections[0].setRotationPoint(0F, 0F, 0F);
-		setRotation(connections[0], 0.0F, -(float)Math.PI/2.0F, 0.0F);
 		
-		// top
-		connections[1].addBox(5F, 0F, 0F, 6, 1, 1);
+		// SOUTH
+		connections[1].addBox(5F, 0F, 15F, 6, 1, 1);
 		connections[1].setRotationPoint(0F, 0F, 0F);
-		
-		// right
-		connections[2].addBox(5F, 0F, -16F, 6, 1, 1);
+
+		// WEST
+		connections[2].addBox(5F, 0F, -1F, 6, 1, 1);
 		connections[2].setRotationPoint(0F, 0F, 0F);
 		setRotation(connections[2], 0.0F, -(float)Math.PI/2.0F, 0.0F);
-		
-		// bottom
-		connections[3].addBox(5F, 0F, 15F, 6, 1, 1);
+
+		// EAST
+		connections[3].addBox(5F, 0F, -16F, 6, 1, 1);
 		connections[3].setRotationPoint(0F, 0F, 0F);
+		setRotation(connections[3], 0.0F, -(float)Math.PI/2.0F, 0.0F);
+		
+		
 		
 		for (ModelRenderer connection : connections) {
 			connection.setTextureSize(textureWidth, textureHeight);
@@ -77,10 +80,10 @@ public class ModelPlayerManager extends ModelBase {
 		}
 
 		// the connectionsField int is a bitfield were bit 1 is left, bit 2 top, etc...
-		if ((connectionsField & 0x1) > 0) connections[0].render(scale);
-		if ((connectionsField & 0x2) > 0) connections[1].render(scale);
-		if ((connectionsField & 0x4) > 0) connections[2].render(scale);
-		if ((connectionsField & 0x8) > 0) connections[3].render(scale);
+		if ((connectionsField & 0x4) > 0) connections[0].render(scale);
+		if ((connectionsField & 0x8) > 0) connections[1].render(scale);
+		if ((connectionsField & 0x10) > 0) connections[2].render(scale);
+		if ((connectionsField & 0x20) > 0) connections[3].render(scale);
 	}
 
 	private void setRotation(ModelRenderer model, float x, float y, float z) {

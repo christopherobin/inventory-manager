@@ -14,7 +14,10 @@ import net.minecraft.network.INetworkManager;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.Packet132TileEntityData;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeDirection;
 
+import com.bombstrike.cc.invmanager.InventoryManager;
 import com.bombstrike.cc.invmanager.Utils;
 import com.bombstrike.cc.invmanager.compat.ComputerCraft;
 import com.bombstrike.cc.invmanager.compat.ComputerCraft.Task;
@@ -32,10 +35,22 @@ public class BaseManager extends TileEntity implements IPeripheral {
 	 */
 	protected Map<Integer, IComputerAccess> computers = null;
 	/**
+	 * This is the common interface shared by CC computers
+	 */
+	Class<?> computerEntityInterface = null;
+	/**
 	 * This is an instance of our ComputerCraft class, that takes care of running
 	 * the actual methods
 	 */
 	protected ComputerCraft cc = null;
+	/**
+	 * A bitfield listing every nearby computers
+	 */
+	protected int computerConnections = 0;
+	/**
+	 * The same with chests
+	 */
+	protected int chestConnections = 0;
 	/**
 	 * This is the list of methods that are provided to ComputerCraft
 	 */
@@ -50,6 +65,13 @@ public class BaseManager extends TileEntity implements IPeripheral {
 		// safe class
 		computers = new ConcurrentHashMap<Integer, IComputerAccess>();
 		callQueue = new ConcurrentLinkedQueue<Task>();
+		
+		// try and retrieve that interface
+		try {
+			computerEntityInterface = Class.forName("dan200.computer.shared.IComputerEntity");
+		} catch (Exception e) {
+			return;
+		}
 	}
 	
 	/**
@@ -130,6 +152,58 @@ public class BaseManager extends TileEntity implements IPeripheral {
 		}
 	}
 	
+	/**
+	 * Recompute the list of neighbor computers and chests
+	 * @param world
+	 * @param x
+	 * @param y
+	 * @param z
+	 */
+	public boolean recomputeConnections() {
+		// don't recompute anything on the client
+		if (worldObj.isRemote) return false;
+
+		boolean update = false;
+		if (computerEntityInterface != null) {
+			// search for nearby computers
+			int detectedComputerConnections = 0;
+			int detectedChestConnections = 0;
+			int shift = 0;
+	
+			for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
+				TileEntity te = Utils.getTileNeighbor(worldObj, xCoord, yCoord, zCoord, direction);
+				if (te != null) {
+					if (computerEntityInterface.isAssignableFrom(te.getClass())) {
+						// create connection
+						detectedComputerConnections |= 0x1 << direction.ordinal();
+					}
+					if (te instanceof IInventory) {
+						detectedChestConnections |= 0x1 << direction.ordinal();
+					}
+				}
+				shift++;
+			}
+			if (computerConnections != detectedComputerConnections) {
+				computerConnections = detectedComputerConnections;
+				update = true;
+			}
+			if (chestConnections != detectedChestConnections) {
+				chestConnections = detectedChestConnections;
+				update = true;
+			}
+		}
+
+		return update;
+	}
+	
+	public int getComputerConnections() {
+		return computerConnections;
+	}
+	
+	public int getChestConnections() {
+		return chestConnections;
+	}
+	
 	@Override
 	public Packet getDescriptionPacket() {
 		NBTTagCompound data = new NBTTagCompound("data");
@@ -143,6 +217,26 @@ public class BaseManager extends TileEntity implements IPeripheral {
 	public void onDataPacket(INetworkManager net, Packet132TileEntityData packet) {
 		super.onDataPacket(net, packet);
 		readFromNBT(packet.customParam1);
+		// the rendering depends on some states we have, update the block
+		worldObj.markBlockForRenderUpdate(xCoord, yCoord, zCoord);
+	}
+	
+	@Override
+	public void writeToNBT(NBTTagCompound nbtData) {
+		nbtData.setInteger("computerConnections", computerConnections);
+		nbtData.setInteger("chestConnections", chestConnections);
+		super.writeToNBT(nbtData);
+	}
+	
+	@Override
+	public void readFromNBT(NBTTagCompound nbtData) {
+		super.readFromNBT(nbtData);
+		if (nbtData.hasKey("computerConnections")) {
+			computerConnections = nbtData.getInteger("computerConnections");
+		}
+		if (nbtData.hasKey("chestConnections")) {
+			chestConnections = nbtData.getInteger("chestConnections");
+		}
 	}
 	
 	/*********************************

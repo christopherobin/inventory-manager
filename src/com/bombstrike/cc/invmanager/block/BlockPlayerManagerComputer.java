@@ -4,6 +4,7 @@ import java.util.Random;
 
 import com.bombstrike.cc.invmanager.InventoryManager;
 import com.bombstrike.cc.invmanager.Utils;
+import com.bombstrike.cc.invmanager.tileentity.BaseManager;
 import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager.TYPE;
 
@@ -21,17 +22,9 @@ import net.minecraftforge.common.ForgeDirection;
 import dan200.computer.api.ComputerCraftAPI;
 
 public class BlockPlayerManagerComputer extends BlockPlayerManager {
-	Class<?> computerEntityInterface = null;
-	
 	public BlockPlayerManagerComputer(int blockId) {
 		super(blockId);
 		setBlockName("playerManagerPeripheral");
-		
-		try {
-			computerEntityInterface = Class.forName("dan200.computer.shared.IComputerEntity");
-		} catch (Exception e) {
-			return;
-		}
 	}
 	
 	@Override
@@ -45,7 +38,12 @@ public class BlockPlayerManagerComputer extends BlockPlayerManager {
 		
 		if (world.isRemote) return;
 
-		recomputeConnections(world, x, y, z);
+		TileEntity entity = world.getBlockTileEntity(x, y, z);
+		if (entity != null && entity instanceof BaseManager) {
+			if (((BaseManager) entity).recomputeConnections()) {
+				world.markBlockForUpdate(x, y, z);
+			}
+		}
 	}
 	
 	@Override
@@ -54,30 +52,11 @@ public class BlockPlayerManagerComputer extends BlockPlayerManager {
 		
 		if (world.isRemote) return;
 
-		recomputeConnections(world, x, y, z);
-	}
-	
-	private void recomputeConnections(World world, int x, int y, int z) {
-		if (computerEntityInterface == null) return;
-
-		// search for nearby computers
-		int connections = 0;
-		int shift = 0;
-		ForgeDirection directions[] = { ForgeDirection.WEST, ForgeDirection.NORTH, ForgeDirection.EAST, ForgeDirection.SOUTH };
-		
-		for (ForgeDirection direction : directions) {
-			TileEntity te = Utils.getTileNeighbor(world, x, y, z, direction);
-			if (te != null) {
-				if (computerEntityInterface.isAssignableFrom(te.getClass())) {
-					// create connection
-					connections |= 0x1 << shift;
-				}
+		TileEntity entity = world.getBlockTileEntity(x, y, z);
+		if (entity != null && entity instanceof BaseManager) {
+			if (((BaseManager) entity).recomputeConnections()) {
+				world.markBlockForUpdate(x, y, z);
 			}
-			shift++;
-		}
-		// set the render state on the tile entity
-		if (world.getBlockTileEntity(x, y, z) instanceof TileEntityPlayerManager) {
-			((TileEntityPlayerManager)world.getBlockTileEntity(x, y, z)).setConnections(connections);
 		}
 	}
 }

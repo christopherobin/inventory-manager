@@ -1,6 +1,5 @@
 package com.bombstrike.cc.invmanager.compat;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -11,7 +10,6 @@ import net.minecraft.item.ItemStack;
 import com.bombstrike.cc.invmanager.Utils;
 import com.bombstrike.cc.invmanager.Utils.Manager;
 import com.bombstrike.cc.invmanager.tileentity.BaseManager;
-import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
 import dan200.computer.api.IComputerAccess;
 

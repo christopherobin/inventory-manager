@@ -85,10 +85,4 @@ public class BlockPlayerManager extends BlockContainer {
     		}
     	}
     }
-	
-	@Override
-	public int tickRate()
-    {
-        return 10;
-    }
 }

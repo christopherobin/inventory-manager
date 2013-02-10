@@ -9,9 +9,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.Property;
 
+import com.bombstrike.cc.invmanager.block.BlockInventoryManager;
 import com.bombstrike.cc.invmanager.block.BlockPlayerManager;
 import com.bombstrike.cc.invmanager.block.BlockPlayerManagerComputer;
 import com.bombstrike.cc.invmanager.client.PacketHandler;
+import com.bombstrike.cc.invmanager.tileentity.BaseManager;
+import com.bombstrike.cc.invmanager.tileentity.TileEntityInventoryManager;
 import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
 import cpw.mods.fml.common.Loader;
@@ -47,6 +50,7 @@ public class InventoryManager
 	//public static int blockPlayerManagerId;
 	public static BlockPlayerManager blockBasicPlayerManager;
 	public static BlockPlayerManagerComputer blockComputerPlayerManager;
+	public static BlockInventoryManager blockInventoryManager;
 	public static int renderId;
 	
 	/**
@@ -73,7 +77,9 @@ public class InventoryManager
 				blockComputerPlayerManager = new BlockPlayerManagerComputer(blockComputerPlayerManagerProperty.getInt(1251));
 			}
 			
-			
+			Property blockInventoryManagerProperty = cfg.getBlock("inventoryManager", 1252);
+			blockInventoryManagerProperty.comment = "Block ID for the Inventory Manager Peripheral";
+			blockInventoryManager = new BlockInventoryManager(blockInventoryManagerProperty.getInt(1252));
 		} catch (Exception e) {
 			logger.severe(MODNAME + " encountered an exception while trying to access it's configuration file:\n" + e);
 		} finally {
@@ -92,8 +98,12 @@ public class InventoryManager
 		GameRegistry.registerBlock(blockBasicPlayerManager, ItemBlock.class, blockBasicPlayerManager.getBlockName());
 		GameRegistry.registerTileEntity(TileEntityPlayerManager.class, blockBasicPlayerManager.getBlockName());
 		LanguageRegistry.addName(blockBasicPlayerManager, "Player Manager Plate");
-		
+
 		if (Loader.isModLoaded("ComputerCraft")) {
+			GameRegistry.registerBlock(blockInventoryManager, ItemBlock.class, blockInventoryManager.getBlockName());
+			GameRegistry.registerTileEntity(TileEntityInventoryManager.class, blockInventoryManager.getBlockName());
+			LanguageRegistry.addName(blockInventoryManager, "Inventory Manager Peripheral");
+
 			GameRegistry.registerBlock(blockComputerPlayerManager, ItemBlock.class, blockComputerPlayerManager.getBlockName());
 			GameRegistry.registerTileEntity(TileEntityPlayerManager.class, blockComputerPlayerManager.getBlockName());
 			LanguageRegistry.addName(blockComputerPlayerManager, "Player Manager Peripheral");
