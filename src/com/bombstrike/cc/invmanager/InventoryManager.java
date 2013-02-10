@@ -32,7 +32,7 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 
-@Mod(modid="invmanager-peripheral", name=InventoryManager.MODNAME, version="1.0", dependencies="required-after:Forge@[6.3.0.0,)")
+@Mod(modid="invmanager-peripheral", name=InventoryManager.MODNAME, version="1.1", dependencies="required-after:Forge@[6.3.0.0,)")
 @NetworkMod(clientSideRequired=false, serverSideRequired=true, channels={InventoryManager.CHANNEL}, packetHandler = PacketHandler.class)
 public class InventoryManager
 {
@@ -122,6 +122,7 @@ public class InventoryManager
 		GameRegistry.addRecipe(new ItemStack(blockBasicPlayerManager, 1), "ttt", "geg", "ggg", 't', Block.thinGlass, 'e', Item.enderPearl, 'g', Item.ingotGold);
 		if (Loader.isModLoaded("ComputerCraft")) {
 			GameRegistry.addRecipe(new ItemStack(blockComputerPlayerManager, 1), "ttt", "rer", "ppp", 't', Block.thinGlass, 'r', Item.redstone, 'e', Item.enderPearl, 'p', Block.stoneSingleSlab);
+			GameRegistry.addRecipe(new ItemStack(blockInventoryManager, 1), "sts", "tet", "sts", 's', Block.stone, 't', Block.thinGlass, 'e', Item.enderPearl);
 		}
 	}
 }
