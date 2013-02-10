@@ -7,7 +7,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.ForgeDirection;
 
+import com.bombstrike.cc.invmanager.InventoryManager;
 import com.bombstrike.cc.invmanager.Utils;
+import com.bombstrike.cc.invmanager.Utils.Manager;
 
 import dan200.computer.api.IPeripheral;
 
@@ -181,5 +183,27 @@ public class TileEntityPlayerManager extends BaseManager implements IPeripheral,
 	@Override
 	public boolean isUseableByPlayer(EntityPlayer var1) {
 		return false;
+	}
+	
+	@Override
+	public int addItem(ItemStack stack, boolean doAdd, ForgeDirection from) {
+		// the plate only accept items from the bottom
+		if (from != ForgeDirection.DOWN) return 0;
+		// don't do the computer stuff on the basic plate
+		if (type == TYPE.BASIC) {
+			if (player == null) {
+				return 0;
+			}
+
+			// just add items to the player inventory
+			Manager manager = new Manager(player.inventory);
+			if (doAdd) {
+				return manager.add(stack.copy());
+			} else {
+				return manager.available(stack);
+			}
+		} else {
+			return super.addItem(stack, doAdd, from);
+		}
 	}
 }

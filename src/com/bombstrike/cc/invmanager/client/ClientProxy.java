@@ -32,6 +32,7 @@ public class ClientProxy extends CommonProxy {
 		super.registerRenderInformation();
 
 		// preload textures
+		MinecraftForgeClient.preloadTexture(InventoryManager.GFXDIR.concat("blocks.png"));
 		MinecraftForgeClient.preloadTexture(InventoryManager.GFXDIR.concat("texture.png"));
 	}
 	

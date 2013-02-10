@@ -1,10 +1,14 @@
 local function runMethod(periph, method, ...)
-	periph[method](...)
-	local event = {os.pullEvent("invmanager_task")}
-	if event[2]["result"] == "success" then
-		return event[2]["data"]
+	local res = periph[method](...)
+	if res == nil then
+		local event = {os.pullEvent("invmanager_task")}
+		if event[2]["result"] == "success" then
+			return event[2]["data"]
+		else
+			error(event[2]["message"])
+		end
 	else
-		error(event[2]["message"])
+		return res
 	end
 end
 

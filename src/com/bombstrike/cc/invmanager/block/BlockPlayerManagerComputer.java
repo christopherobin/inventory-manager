@@ -31,32 +31,4 @@ public class BlockPlayerManagerComputer extends BlockPlayerManager {
 	public TileEntity createNewTileEntity(World world) {
 		return new TileEntityPlayerManager(TYPE.COMPUTER);
 	}
-	
-	@Override
-	public void onBlockPlacedBy(World world, int x, int y, int z, EntityLiving entityliving) {
-		super.onBlockPlacedBy(world, x, y, z, entityliving);
-		
-		if (world.isRemote) return;
-
-		TileEntity entity = world.getBlockTileEntity(x, y, z);
-		if (entity != null && entity instanceof BaseManager) {
-			if (((BaseManager) entity).recomputeConnections()) {
-				world.markBlockForUpdate(x, y, z);
-			}
-		}
-	}
-	
-	@Override
-	public void onNeighborBlockChange(World world, int x, int y, int z, int blockID) {
-		super.onNeighborBlockChange(world, x, y, z, blockID);
-		
-		if (world.isRemote) return;
-
-		TileEntity entity = world.getBlockTileEntity(x, y, z);
-		if (entity != null && entity instanceof BaseManager) {
-			if (((BaseManager) entity).recomputeConnections()) {
-				world.markBlockForUpdate(x, y, z);
-			}
-		}
-	}
 }

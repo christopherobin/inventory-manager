@@ -20,7 +20,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 import dan200.computer.api.ComputerCraftAPI;
 
-public class BlockPlayerManager extends BlockContainer {
+public class BlockPlayerManager extends BlockBaseManager {
 	public BlockPlayerManager(int blockId) {
 		super(blockId, Material.iron);
 		setBlockName("basicPlayerManager");

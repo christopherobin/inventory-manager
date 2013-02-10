@@ -3,10 +3,15 @@
  */
 package com.bombstrike.cc.invmanager.block;
 
+import java.util.Random;
+
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -22,7 +27,7 @@ import cpw.mods.fml.relauncher.SideOnly;
  * @author crobin
  * 
  */
-public class BlockInventoryManager extends BlockContainer {
+public class BlockInventoryManager extends BlockBaseManager {
 	/**
 	 * @param par1
 	 * @param par2Material
@@ -74,33 +79,5 @@ public class BlockInventoryManager extends BlockContainer {
 		}
 		
 		return 0;
-	}
-
-	@Override
-	public void onBlockPlacedBy(World world, int x, int y, int z, EntityLiving entityliving) {
-		super.onBlockPlacedBy(world, x, y, z, entityliving);
-		
-		if (world.isRemote) return;
-
-		TileEntity entity = world.getBlockTileEntity(x, y, z);
-		if (entity != null && entity instanceof BaseManager) {
-			if (((BaseManager) entity).recomputeConnections()) {
-				world.markBlockForUpdate(x, y, z);
-			}
-		}
-	}
-	
-	@Override
-	public void onNeighborBlockChange(World world, int x, int y, int z, int blockID) {
-		super.onNeighborBlockChange(world, x, y, z, blockID);
-		
-		if (world.isRemote) return;
-
-		TileEntity entity = world.getBlockTileEntity(x, y, z);
-		if (entity != null && entity instanceof BaseManager) {
-			if (((BaseManager) entity).recomputeConnections()) {
-				world.markBlockForUpdate(x, y, z);
-			}
-		}
 	}
 }
