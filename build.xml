@@ -109,7 +109,7 @@
 		<unzip dest="${extern.dir}" src="${download.dir}/${buildcraft.name}"/>
 	</target>
 
-	<target name="compile" depends="initialize-version,setup,dependencies">
+	<target name="compile" depends="setup,dependencies">
 
 		<delete dir="${classes.dir}"/>
 		<mkdir dir="${classes.dir}"/>
