@@ -31,7 +31,7 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 
-@Mod(modid="invmanager-peripheral", name=InventoryManager.MODNAME, version="1.1", dependencies="required-after:Forge@[6.3.0.0,)")
+@Mod(modid="invmanager-peripheral", name=InventoryManager.MODNAME, version="@VERSION@", dependencies="required-after:Forge@[6.3.0.0,)")
 @NetworkMod(clientSideRequired=false, serverSideRequired=true, channels={InventoryManager.CHANNEL}, packetHandler = PacketHandler.class)
 public class InventoryManager
 {
