@@ -13,9 +13,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
-import buildcraft.api.transport.IPipe;
 import buildcraft.api.transport.IPipeEntry;
-import buildcraft.api.transport.IPipeTile;
 
 import com.bombstrike.cc.invmanager.tileentity.BaseManager;
 import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;

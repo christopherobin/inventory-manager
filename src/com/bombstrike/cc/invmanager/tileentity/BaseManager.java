@@ -361,7 +361,8 @@ public class BaseManager extends TileEntity implements IPeripheral,
 	@Override
 	public void attach(IComputerAccess computer) {
 		computers.put(computer.getID(), computer);
-		computer.mountFixedDir("invmanager", "mods/invmanager-lua", true, 0);
+		computer.mountFixedDir("rom/apis/invmanager",
+				"mods/invmanager-lua/invmanager.lua", true, 0);
 	}
 
 	@Override

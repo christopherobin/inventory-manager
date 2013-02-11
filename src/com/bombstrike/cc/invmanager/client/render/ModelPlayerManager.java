@@ -1,11 +1,10 @@
 package com.bombstrike.cc.invmanager.client.render;
 
 
-import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
-
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
-import net.minecraftforge.common.ForgeDirection;
+
+import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
 public class ModelPlayerManager extends ModelBase {
 	// fields

@@ -7,7 +7,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.ForgeDirection;
 
-import com.bombstrike.cc.invmanager.InventoryManager;
 import com.bombstrike.cc.invmanager.Utils;
 import com.bombstrike.cc.invmanager.Utils.Manager;
 

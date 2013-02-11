@@ -17,7 +17,7 @@ public class CommonProxy implements IGuiHandler {
 	public void prepareApis() {
 		try {
 			// create target directory if necessary
-			File targetFile = new File("mods/invmanager-lua/invmanager");
+			File targetFile = new File("mods/invmanager-lua/invmanager.lua");
 			if (!targetFile.getParentFile().exists()) {
 				targetFile.getParentFile().mkdirs();
 			}
@@ -29,7 +29,7 @@ public class CommonProxy implements IGuiHandler {
 			
 			// retrieve where our mod is stored
 			File modFolder = Loader.instance().activeModContainer().getSource();
-			String filePath = "com/bombstrike/cc/invmanager/lua/invmanager";
+			String filePath = "com/bombstrike/cc/invmanager/lua/invmanager.lua";
 
 			if (modFolder.isFile()) {
 				// we are inside a zip, we'll need to do crazy stuff

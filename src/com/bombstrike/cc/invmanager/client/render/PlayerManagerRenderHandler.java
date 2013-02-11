@@ -3,10 +3,8 @@ package com.bombstrike.cc.invmanager.client.render;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.world.IBlockAccess;
-import net.minecraftforge.liquids.IBlockLiquid.BlockType;
 
 import com.bombstrike.cc.invmanager.InventoryManager;
-import com.bombstrike.cc.invmanager.block.BlockPlayerManager;
 import com.bombstrike.cc.invmanager.block.BlockPlayerManagerComputer;
 import com.bombstrike.cc.invmanager.client.render.TileEntityPlayerManagerRenderer.STATUS;
 import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager.TYPE;

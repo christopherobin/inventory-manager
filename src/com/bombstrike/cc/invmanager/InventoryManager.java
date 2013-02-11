@@ -13,7 +13,6 @@ import com.bombstrike.cc.invmanager.block.BlockInventoryManager;
 import com.bombstrike.cc.invmanager.block.BlockPlayerManager;
 import com.bombstrike.cc.invmanager.block.BlockPlayerManagerComputer;
 import com.bombstrike.cc.invmanager.client.PacketHandler;
-import com.bombstrike.cc.invmanager.tileentity.BaseManager;
 import com.bombstrike.cc.invmanager.tileentity.TileEntityInventoryManager;
 import com.bombstrike.cc.invmanager.tileentity.TileEntityPlayerManager;
 
