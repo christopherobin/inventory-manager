@@ -18,7 +18,7 @@
 
 	<property name="mc.version" value="1.4.7"/>
 	<property name="forge.version" value="6.6.0.515"/>
-	<property name="project.version" value="1.2.0"/>
+	<property name="project.version" value="1.2.1"/>
 	<property name="computercraft.version" value="1.48pr2"/>
 	<property name="buildcraft.version" value="3.4.2"/>
 
