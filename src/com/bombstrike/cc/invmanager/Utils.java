@@ -221,65 +221,41 @@ public class Utils {
 		 */
 		public int add(ItemStack stack, int slot, int quantity) {
 			int invSize = inventory.getSizeInventory();
-			ItemStack destStack;
+			int i = (slot > 0 && slot < invSize ? slot : 0);
+			int moved = 0;
+			int available;
+			ItemStack target;
 
-			int originalAmount = stack.stackSize;
-			if (stack.stackSize > quantity) {
-				stack.stackSize = quantity;
-			} else {
+			if (quantity > stack.stackSize || quantity == -1) {
 				quantity = stack.stackSize;
 			}
-
-			int amountLeft = stack.stackSize;
-			int amountToSet;
-			int i = (slot > 0 && slot < invSize ? slot : 0);
-
-			for (; i < invSize && amountLeft > 0; i++) {
-				// ignore invalid slots for that item
-				if (!stackBelongInSlot(stack, i))
-					continue;
-				// search for an available inventory
-				destStack = inventory.getStackInSlot(i);
-				if (destStack == null) {
-					// check amount to send, based on stack limit
-					amountToSet = Math.min(amountLeft,
-							inventory.getInventoryStackLimit());
-					// set distant slot content
-					ItemStack newStack = stack.copy();
-					newStack.stackSize = amountToSet;
-					inventory.setInventorySlotContents(i, newStack);
-					// reduce amount left
-					amountLeft -= inventory.getInventoryStackLimit();
-				} else if (canStack(stack, destStack)) {
-					// retrieve the space available in that slot
-					int spaceAvailable = (inventory.getInventoryStackLimit() - destStack.stackSize);
-					if (spaceAvailable == 0)
-						continue; // no use going any further
-					// find how much we can set
-					amountToSet = Math.min(
-							destStack.stackSize + spaceAvailable,
-							destStack.stackSize + amountLeft);
-					// send to inventory
-					destStack.stackSize = amountToSet;
-					// reduce amount left
-					amountLeft -= spaceAvailable;
+			
+			for (; i < invSize && quantity > 0; i++) {
+				// ignore invalid slots
+				if (!stackBelongInSlot(stack, i)) continue;
+				
+				target = inventory.getStackInSlot(i);
+				if (target == null) {
+					available = Math.min(quantity, inventory.getInventoryStackLimit());
+					ItemStack tmp = stack.copy();
+					tmp.stackSize = available;
+					moved += available;
+					quantity -= available;
+					inventory.setInventorySlotContents(i, tmp);
+				} else if (canStack(stack, target)) {
+					available = Math.min((inventory.getInventoryStackLimit() - target.stackSize), quantity);
+					if (available <= 0) continue;
+					target.stackSize += available;
+					moved += available;
+					quantity -= available;
 				}
 			}
-
-			if (amountLeft < 0)
-				amountLeft = 0;
-			stack.stackSize = amountLeft;
-
-			// if a slot was specified and we could only move part of the stuff,
-			// try again from the start
-			if (slot > 0 && amountLeft > 0 && amountLeft != stack.stackSize) {
-				stack.stackSize = amountLeft;
-				amountLeft = add(stack, 0, amountLeft);
+			stack.stackSize -= moved;
+			
+			if (slot > 0 && quantity > 0) {
+				moved += add(stack, slot, quantity);
 			}
-
-			// no item left to move
-			stack.stackSize = (originalAmount - quantity) + amountLeft;
-			return originalAmount - amountLeft;
+			return moved;
 		}
 	}
 }
