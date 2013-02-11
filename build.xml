@@ -116,18 +116,18 @@
 
 		<!-- Copy sources -->
 		<copy todir="${mcpsrc.dir}/minecraft">
-			<fileset dir="${src.dir}/com"/>
+			<fileset dir="${src.dir}"/>
 			<filterset>
-				<filter token="VERSION" value="${project.version.full}" />
+				<filter token="VERSION" value="${project.version}" />
 			</filterset>
 		</copy>
 
 		<!-- Copy dependencies -->
 		<copy todir="${mcpsrc.dir}/minecraft">
-			<fileset dir="${extern.dir}/cc-${computercraft.version}/src/dan200"/>
+			<fileset dir="${extern.dir}/cc-${computercraft.version}/src"/>
 		</copy>
-		<mkdir dir="${mcpsrc.dir}/minecraft/buildcraft"/>
-		<copy todir="${mcpsrc.dir}/minecraft/buildcraft">
+		<mkdir dir="${mcpsrc.dir}/minecraft/buildcraft/api"/>
+		<copy todir="${mcpsrc.dir}/minecraft/buildcraft/api">
 			<fileset dir="${extern.dir}/BuildCraft-${buildcraft.version}/common/buildcraft/api"/>
 		</copy>
 
