@@ -264,7 +264,9 @@ public class BaseManager extends TileEntity implements IPeripheral,
 		// save buffer
 		ItemStack stack = internalBuffer.getStackInSlot(0);
 		if (stack != null) {
-			nbtData.setCompoundTag("buffer", stack.stackTagCompound);
+			NBTTagCompound slotData = new NBTTagCompound();
+			stack.writeToNBT(slotData);
+			nbtData.setCompoundTag("buffer", slotData);
 		}
 		super.writeToNBT(nbtData);
 	}
