@@ -1,0 +1,17 @@
+[
+	{
+		"modid": "invmanager-peripheral",
+		"name": "Inventory Manager",
+		"description": "Interact with inventories using ComputerCraft!",
+		"version": "@VERSION@",
+		"credits": "Create by BombStrike",
+		"logoFile": "",
+		"mcversion": "",
+		"url": "http://www.computercraft.info/forums2/index.php?/topic/8910-wip-cc-1481-mc-147-inventory-manager/",
+		"updateUrl": "",
+		"authors": [ "BombStrike" ],
+		"parent":"",
+		"screenshots": [],
+		"dependencies": ["mod_MinecraftForge"]
+	}
+]
