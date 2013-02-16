@@ -1,6 +1,7 @@
 # Inventory Manager
 
 Inventory manager is a mod for minecraft that adds a bunch of devices/peripherals for manipulating/fusing player and chest inventories.
+More details on the original forum post: http://www.computercraft.info/forums2/index.php?/topic/8910-wip-cc-1481-mc-147-inventory-manager/
 
 ## Player Manager
 
@@ -14,39 +15,53 @@ This version of the player manager doesn't connect to computers, but can still b
 
 ![Recipe](http://i.imgur.com/yCMZUJr.png)
 
+## Inventory Manager
+
+This block can connect to any inventory and pipe in 6 directions (beside the direction is connected from).
+
+![Recipe](http://i.imgur.com/Ib6gbut.png)
+
 ## API
 
 Ok so there is the current state of the API, if you have any remark please feel free to make a comment:
 
 ### Methods:
 
-`int size(string:name)`  
-Returns the size of the inventory specified
+`size(direction)`  
+Direction is a valid direction or inventory name, see below for a list of directions
 
-`table:item read(string:name, int:slot)`  
-Read the item at the specified slot, returning an item object
+`read(direction, slot)`  
+Read the item at the specified slot, returning details about the stack in this slot. Slot IDs start from 1 to the inventory size.
+See below for the details on the details table.
 
-`table:status move(string:invFrom, int:slotFrom, string:invTo, int:slotTo = 0, int:amount = invFrom.STACK_SIZE)`  
-Replaces the export and import methods (used in the youtube video), moves items from an inventory to another. slotTo and amount are optionnal and if the destination slot is full, it will try moving it anywhere else that has room.
+`move(directionFrom, directionTo, slotFrom = nil, slotTo = nil, amount = STACK_SIZE)`  
+Moves a stack from the source inventory to a target inventory, with an optionally specified source and target slot, as well as a specified amount.
+If slotFrom is not provided, finds the first item in the inventory and moves it.
+If slotTo is not provided, finds the first available spot, if specified, try that spot first, then try the other slots.
+Returns the same details as read() with an additional property moved that contains the amount of items moved by the command.
+
+`send(directionFrom, directionTo, slotFrom = 1, amount = STACK_SIZE)`  
+Send a stack into a pipe, allowing you to chose from which slot and how much to send.
+If slotFrom is not provided, finds the first item in the inventory and moves it.
+Returns the same details as read() with an additional property sent that contains the amount of items sent into the pipe.
+
+`isInventory(direction)`  
+Is the block at the given direction is a valid inventory?
+
+`isPipe(direction)`  
+Is the block at the given direction is a valid pipe?
 
 ### Types:
 
-`string:name`  
+`direction`  
 Either one of __"player"__, __"north"__, __"east"__, __"south"__, __"west"__, __"up"__, __"down"__. The plate only accepts __"player"__ and __"down"__, the inventory manager accept anything but __"player"__.
 
-`table:item`  
-An item description, as it is in the stack, with the following fields:
+`item`  
+A description of a stack, returned by _read()_
 
-+  `int:id` The ID of the item
-+  `string:name` The raw name of the item in the MC engine
-+  `string:display` The actual translated name of the item (for display purposes)
-+  `int:amount` The amount of items in the stack
-+  `int:damage` The damage of the item
-
-
-`table:status`  
-The status of the move command, contains all the fields of the item object, with the following fields:
-
-+  `int:moved` The amount of items that were moved by the command
-+  `int:left` The amount of items left (if the container was almost full and not all items were moved)
++  `id` The ID of the item
++  `name` The raw name of the item in the MC engine
++  `display` The actual translated name of the item (for display purposes)
++  `amount` The amount of items in the stack
++  `damage` The damage of the item
 
