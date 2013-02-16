@@ -53,11 +53,11 @@ public class ComputerCraft {
 	public Object send(Object[] arguments) throws Exception {
 		IInventory source;
 		IPipeEntry target;
-		int sourceSlot, quantity;
+		int sourceSlot = -1, quantity;
 		String targetDirection;
 		
 		// parse aguments
-		if (arguments.length < 3) {
+		if (arguments.length < 2) {
 			throw new Exception("missing arguments");
 		}
 
@@ -67,18 +67,20 @@ public class ComputerCraft {
 		if (source == null) throw new Exception("the inventory \"" + (String)arguments[0] + "\" doesn't exists");
 		// set the default quantity value to be the size of a stack
 		quantity = source.getInventoryStackLimit();
-		
-		// source slot
-		if (!(arguments[1] instanceof Double)) throw new Exception("invalid argument for source inventory slot");
-		// retrieve slot index and compensate
-		sourceSlot = ((Double)arguments[1]).intValue() - 1;
-		if (sourceSlot < 0 || sourceSlot >= source.getSizeInventory()) throw new Exception("source slot indice out of bounds");
-		
-		// target inventory
-		if (!(arguments[2] instanceof String)) throw new Exception("invalid argument for target inventory");
-		targetDirection = (String)arguments[2];
+
+		// target pipe
+		if (!(arguments[1] instanceof String)) throw new Exception("invalid argument for target inventory");
+		targetDirection = (String)arguments[1];
 		target = Utils.getPipe(tileEntity, targetDirection);
-		if (target == null) throw new Exception("the pipe \"" + (String)arguments[2] + "\" doesn't exists");
+		if (target == null) throw new Exception("the pipe \"" + (String)arguments[1] + "\" doesn't exists");
+		
+		if (arguments.length > 2) {
+			// source slot
+			if (!(arguments[2] instanceof Double)) throw new Exception("invalid argument for source inventory slot");
+			// retrieve slot index and compensate
+			sourceSlot = ((Double)arguments[2]).intValue() - 1;
+			if (sourceSlot < 0 || sourceSlot >= source.getSizeInventory()) throw new Exception("source slot indice out of bounds");
+		}
 		
 		// quantity
 		if (arguments.length > 3) {
@@ -87,7 +89,17 @@ public class ComputerCraft {
 			if (quantity < 1 || quantity > source.getInventoryStackLimit()) quantity = source.getInventoryStackLimit();
 		}
 		
-		ItemStack sourceStack = source.getStackInSlot(sourceSlot);
+		ItemStack sourceStack = null;
+		if (sourceSlot == -1) {
+			int invSize = source.getSizeInventory();
+			for (sourceSlot = 0; sourceSlot < invSize; sourceSlot++) {
+				sourceStack = source.getStackInSlot(sourceSlot);
+				if (sourceStack != null) break;
+			}
+		} else {
+			sourceStack = source.getStackInSlot(sourceSlot);
+		}
+
 		if (sourceStack != null) {
 			ItemStack pipeStack = sourceStack.copy();
 			pipeStack.stackSize = Math.min(pipeStack.stackSize, quantity);
@@ -123,10 +135,10 @@ public class ComputerCraft {
 		// variables
 		IInventory source;
 		IInventory target;
-		int sourceSlot, targetSlot = 0, quantity;
+		int sourceSlot = -1, targetSlot = 0, quantity;
 		
 		// parse aguments
-		if (arguments.length < 3) {
+		if (arguments.length < 2) {
 			throw new Exception("missing arguments");
 		}
 		
@@ -136,16 +148,18 @@ public class ComputerCraft {
 		if (source == null) throw new Exception("the inventory \"" + (String)arguments[0] + "\" doesn't exists");
 		// set the default quantity value to be the size of a stack
 		quantity = source.getInventoryStackLimit();
-		
-		// source slot
-		if (!(arguments[1] instanceof Double)) throw new Exception("invalid argument for source inventory slot");
-		sourceSlot = ((Double)arguments[1]).intValue() - 1;
-		if (sourceSlot < 0 || sourceSlot >= source.getSizeInventory()) throw new Exception("source slot indice out of bounds");
-		
+
 		// target inventory
-		if (!(arguments[2] instanceof String)) throw new Exception("invalid argument for target inventory");
-		target = tileEntity.resolveInventory((String)arguments[2]);
-		if (target == null) throw new Exception("the inventory \"" + (String)arguments[2] + "\" doesn't exists");
+		if (!(arguments[1] instanceof String)) throw new Exception("invalid argument for target inventory");
+		target = tileEntity.resolveInventory((String)arguments[1]);
+		if (target == null) throw new Exception("the inventory \"" + (String)arguments[1] + "\" doesn't exists");
+
+		// source slot
+		if (arguments.length > 2) {
+			if (!(arguments[2] instanceof Double)) throw new Exception("invalid argument for source inventory slot");
+			sourceSlot = ((Double)arguments[2]).intValue() - 1;
+			if (sourceSlot < 0 || sourceSlot >= source.getSizeInventory()) throw new Exception("source slot indice out of bounds");
+		}
 		
 		// target slot
 		if (arguments.length > 3) {
@@ -160,8 +174,18 @@ public class ComputerCraft {
 			quantity = ((Double)arguments[4]).intValue();
 			if (quantity < 1 || quantity > source.getInventoryStackLimit()) quantity = source.getInventoryStackLimit();
 		}
-		
-		ItemStack sourceStack = source.getStackInSlot(sourceSlot);
+
+		ItemStack sourceStack = null;
+		if (sourceSlot == -1) {
+			int invSize = source.getSizeInventory();
+			for (sourceSlot = 0; sourceSlot < invSize; sourceSlot++) {
+				sourceStack = source.getStackInSlot(sourceSlot);
+				if (sourceStack != null) break;
+			}
+		} else {
+			sourceStack = source.getStackInSlot(sourceSlot);
+		}
+
 		if (sourceStack != null) {
 			Manager manager = Utils.getInventoryManager(target);
 			int moved = manager.add(sourceStack, targetSlot, quantity);
