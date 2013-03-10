@@ -253,7 +253,7 @@ public class Utils {
 			stack.stackSize -= moved;
 			
 			if (slot > 0 && quantity > 0) {
-				moved += add(stack, slot, quantity);
+				moved += add(stack, 0, quantity);
 			}
 			return moved;
 		}
