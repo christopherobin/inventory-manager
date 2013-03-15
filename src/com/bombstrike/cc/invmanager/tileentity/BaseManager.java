@@ -159,7 +159,7 @@ public class BaseManager extends TileEntity implements IPeripheral,
 	 *            Any of the Lua compatible object
 	 */
 	public void queueEvent(String event, Object[] arguments) {
-		queueEvent(event, arguments, null);
+		queueEvent(event, arguments, -1);
 	}
 
 	/**
@@ -173,13 +173,22 @@ public class BaseManager extends TileEntity implements IPeripheral,
 	 *            instance
 	 */
 	public void queueEvent(String event, Object[] arguments,
-			IComputerAccess targetComputer) {
-		if (targetComputer == null) {
+			int targetComputerID) {
+		if (targetComputerID == -1) {
 			for (IComputerAccess computer : computers.values()) {
 				computer.queueEvent(event, arguments);
 			}
 		} else {
-			targetComputer.queueEvent(event, arguments);
+			// If the computer has detached us while we had a task
+			// queued, then the target computer ID will no longer
+			// be in our "computers" map.  (We must not attempt
+			// to call queueEvent on a detached IComputerAccess,
+			// because it will throw an exception.)
+		        IComputerAccess targetComputer =
+			    computers.get(TargetComputerID);
+			if (targetComputer != null)
+			        targetComputer.queueEvent(event, arguments);
+		        }
 		}
 	}
 
