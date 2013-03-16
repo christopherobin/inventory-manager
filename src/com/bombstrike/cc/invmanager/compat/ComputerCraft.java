@@ -23,11 +23,11 @@ public class ComputerCraft {
 	 * between threads
 	 */
 	public class Task {
-		protected IComputerAccess computer;
+		protected int computerID;
 		protected Callable<Object> callable;
 		
 		public Task(IComputerAccess computer, Callable<Object> callable) {
-			this.computer = computer;
+		        this.computerID = computer.getID();
 			this.callable = callable;
 		}
 		
@@ -35,8 +35,8 @@ public class ComputerCraft {
 			return callable.call();
 		}
 		
-		public IComputerAccess getComputer() {
-			return computer;
+		public int getComputerID() {
+			return computerID;
 		}
 	}
 	
