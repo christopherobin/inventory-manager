@@ -243,7 +243,8 @@ public class Utils {
 					quantity -= available;
 					inventory.setInventorySlotContents(i, tmp);
 				} else if (canStack(stack, target)) {
-					available = Math.min((inventory.getInventoryStackLimit() - target.stackSize), quantity);
+				        int maxstack = Math.min(inventory.getInventoryStackLimit(), target.getMaxStackSize());
+				        available = Math.min((maxstack - target.stackSize), quantity);
 					if (available <= 0) continue;
 					target.stackSize += available;
 					moved += available;
