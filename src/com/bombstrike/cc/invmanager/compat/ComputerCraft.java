@@ -35,7 +35,7 @@ public class ComputerCraft {
 			return callable.call();
 		}
 		
-		public  getComputerID() {
+		public int getComputerID() {
 			return computerID;
 		}
 	}

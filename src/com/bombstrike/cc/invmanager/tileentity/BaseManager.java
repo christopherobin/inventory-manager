@@ -126,7 +126,7 @@ public class BaseManager extends TileEntity implements IPeripheral,
 				result.put("message", e.getMessage());
 			}
 			queueEvent("invmanager_task", new Object[] { result },
-					task.getComputer());
+					task.getComputerID());
 		}
 	}
 
@@ -185,10 +185,9 @@ public class BaseManager extends TileEntity implements IPeripheral,
 			// to call queueEvent on a detached IComputerAccess,
 			// because it will throw an exception.)
 		        IComputerAccess targetComputer =
-			    computers.get(TargetComputerID);
+			    computers.get(targetComputerID);
 			if (targetComputer != null)
 			        targetComputer.queueEvent(event, arguments);
-		        }
 		}
 	}
 
